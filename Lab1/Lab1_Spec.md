@@ -16,39 +16,40 @@ results expected early on.
 
 #### 1) General Description
 
-[ ] A computer used for UI, display, and control.
+- [ ] A computer used for UI, display, and control.
 
-[ ] A thermometer sensor, at the end of a 2.0 +-0.1 meter cable. This should be 
+- [ ] A thermometer sensor, at the end of a 2.0 +-0.1 meter cable. This should be 
 a nice mechanical construction, capable of bouncing around without breaking. 
 The sensor should not be damaged when placed in ice water.
 
-[ ] A "third box" containing, at minimum, a display (e.g. a set of 7-segment LEDs 
+- [ ] A "third box" containing, at minimum, a display (e.g. a set of 7-segment LEDs 
 or equivalent), a button, a battery, and a power switch. It is intended that the
 box, together with the sensor, can act as a battery-operated thermometer. 
 The temperature data is then available on the internet.
 
-[ ] A cellphone that can receive text messages.
+- [ ] A cellphone that can receive text messages.
 
 #### 2) Requirements for the afore mentioned "third box"
 
-[ ] This "third box” should be enclosed in some way, and physically robust (can 
+- [ ] This "third box” should be enclosed in some way, and physically robust (can 
 stand being dropped from the workbench to the floor), and can be turned upside 
 down, with the circuit, connectors, and switches still working.
 
-[ ] All cable connections to the third box should have terminating connectors, 
+- [ ] All cable connections to the third box should have terminating connectors, 
 securely mounted to the third box. These connectors should be the kind meant to 
 be easily connected/disconnected by a casual user.
 
-[ ] When dropped to the floor with cables connected, the connectors or cables 
+- [ ] When dropped to the floor with cables connected, the connectors or cables 
 should not break (although it is OK if they become disconnected). 
 
-[ ] If the sensor has been unplugged and is then plugged in, the third box should 
+- [ ] If the sensor has been unplugged and is then plugged in, the third box should 
 begin normal operation without user intervention. 
 
 <p align="center">
   <img src="https://i.imgur.com/DjwLPn4.png">
-  <b> Figure 1: General Physical description of the temperature measurement 
-  system. </b>
+  </br>
+  <b>Fig 1. General Physical description of the temperature measurement 
+  system.</b>
 </p>
 
 #### 3
@@ -63,19 +64,19 @@ on the box shows the temperature of the thermometer sensor in degrees C. There
 are no requirements on the resolution or size of the display. However, it must 
 have the following features: 
 
-[ ] The correct temperature should appear on the display when the button is 
+- [ ] The correct temperature should appear on the display when the button is 
 pressed, with no noticeable delay. Delays are noticeable if they are longer than 
 about 20 milliseconds.
 
-[ ] The display should be clearly readable under normal indoor lighting 
+- [ ] The display should be clearly readable under normal indoor lighting 
 conditions and all temperatures within the normal range of operation of this 
 device (as specified below) should be displayed correctly.
 
-[ ] The button is to be “momentary contact”: When pressed, the display is on, 
+- [ ] The button is to be “momentary contact”: When pressed, the display is on, 
 when not pressed, the display is off. The display should go dark when the button
 is released with no noticeable delay. 
 
-[ ] If the temperature sensor is not plugged into the third box, or is not 
+- [ ] If the temperature sensor is not plugged into the third box, or is not 
 working in some way, the display should notify the user that there is an error 
 condition. 
 
@@ -84,7 +85,7 @@ When the power switch on the third box is “on”, the following features are
 available from an internet connected computer when appropriate software is run 
 on the computer:
 
-[ ] The real-time temperature, in degrees C or degrees F, (controlled by the 
+- [ ] The real-time temperature, in degrees C or degrees F, (controlled by the 
 computer user), is displayed prominently (in a large font) on the computer 
 screen, and updated once a second.
 
@@ -94,12 +95,12 @@ message should appear instead of the real time temperature.
 - if the third box switch is off, a message “no data available” should appear 
 instead of the real-time temperature. 
 
-[ ] By user action on the computer, the temperature display on the third box can be 
+- [ ] By user action on the computer, the temperature display on the third box can be 
 turned on or turned off (in other words, the computer can virtually “press the 
 button” on the third box.) The button response me in this situation shall be 
 less than 1 second. 
 
-[ ] When the computer is connected to the internet, and the switch on the third box 
+- [ ] When the computer is connected to the internet, and the switch on the third box 
 is on, a graph of the past temperature readings from the third box can be 
 displayed on the computer screen. The graph of the past 300 seconds of data 
 should be available within 10 seconds of the start of the software on the 
@@ -140,7 +141,8 @@ turned on.
 
 <p align="center">
   <img src="https://i.imgur.com/n2OgvBX.png">
-  <b> Figure 2: Possible look for the computer graph display. 
+  </br>
+  <b>Fig 2. Possible look for the computer graph display. 
   New data appears at the right and the graph scrolls to the left.  
   Here, something went wrong 180 seconds ago, for 20 seconds or so.</b>
 </p>
@@ -157,17 +159,17 @@ interface.
 
 Total Range of Operation
 
-[ ] The design range of the possible temperature displayed should be at least from 
+- [ ] The design range of the possible temperature displayed should be at least from 
 minus 10 to +63 degrees Celsius. This does not have to be verified by testing, 
 (simply because it is not feasible to verify this in this class) but should be 
 addressed by the design. 
 
-[ ] When someone holds the temperature sensor in their hand, the heat from their 
+- [ ] When someone holds the temperature sensor in their hand, the heat from their 
 fingers should make the temperature go up after a few seconds. Holding a soldering 
 iron close to or briefly touching the sensor should do the same, even more quickly. 
 
-[ ] In the lab, at room temperature, the output of the thermometer should be 
+- [ ] In the lab, at room temperature, the output of the thermometer should be 
 approximately 22 degrees C, +-4 degrees C. 
 
-[ ] When placed in a water-ice mixture, the output of the thermometer should be 0 
+- [ ] When placed in a water-ice mixture, the output of the thermometer should be 0 
 degrees C, +- 2 degrees C
