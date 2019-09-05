@@ -52,13 +52,11 @@ begin normal operation without user intervention.
   system.</b>
 </p>
 
-#### 3
-The switch on the third box functions as an on/off switch. When the switch is 
+**3)** The switch on the third box functions as an on/off switch. When the switch is 
 “off”, the thermometer system cannot display temperatures and temperature data 
 is not available from the internet. 
 
-#### 4
-When the switch on the third box is “on”, the following features are available 
+**4)** When the switch on the third box is “on”, the following features are available 
 locally at the third box. When the button is pressed on the third box, a display
 on the box shows the temperature of the thermometer sensor in degrees C. There 
 are no requirements on the resolution or size of the display. However, it must 
@@ -80,8 +78,7 @@ is released with no noticeable delay.
 working in some way, the display should notify the user that there is an error 
 condition. 
 
-#### 5
-When the power switch on the third box is “on”, the following features are 
+**5)** When the power switch on the third box is “on”, the following features are 
 available from an internet connected computer when appropriate software is run 
 on the computer:
 
@@ -133,11 +130,9 @@ the temperature sensor is not plugged in, the graph should continue to scroll an
 graph data should be shown as missing. When the error is corrected, the graphing 
 and real time display of data should resume. 
 
-#### 6
-
-If the computer is on and the third box is off, the graph and real time display of 
-data should appear on the computer screen within 10 seconds of the third box being 
-turned on. 
+**6)** If the computer is on and the third box is off, the graph and real time 
+display of data should appear on the computer screen within 10 seconds of the third 
+box being turned on. 
 
 <p align="center">
   <img src="https://i.imgur.com/n2OgvBX.png">
@@ -147,17 +142,13 @@ turned on.
   Here, something went wrong 180 seconds ago, for 20 seconds or so.</b>
 </p>
 
-#### 7
-
-- When the computer is on and the third box is on, a text message will be sent to a 
+**7)** When the computer is on and the third box is on, a text message will be sent to a 
 specified phone number whenever the real-time temperature exceeds a certain value or 
 is lower than a certain value. The two text messages, the max temperature, the min 
 temperature, and the phone number can all be altered with the computer user 
 interface.
 
-#### 8
-
-Total Range of Operation
+#### 8) Total Range of Operation
 
 - [ ] The design range of the possible temperature displayed should be at least from 
 minus 10 to +63 degrees Celsius. This does not have to be verified by testing, 
