@@ -3,10 +3,6 @@ import { Router } from 'preact-router';
 
 import Header from './header/header';
 
-// Code-splitting is automated for routes
-import Home from '../routes/home/home';
-import Profile from '../routes/profile/profile';
-
 interface MyProps {}
 interface MyState {}
 
@@ -25,11 +21,6 @@ export default class App extends Component<MyProps, MyState> {
         return (
             <div id="app">
                 <Header />
-                <Router onChange={this.handleRoute}>
-                    <Home path="/" />
-                    <Profile path="/profile/" user="me" />
-                    <Profile path="/profile/:user" />
-                </Router>
             </div>
         );
     }

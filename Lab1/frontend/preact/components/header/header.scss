@@ -1,6 +1,7 @@
 .header {
     background: #90d7c2;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    display: flex;
     height: 56px;
     left: 0;
     padding: 0;
@@ -17,7 +18,7 @@
     font-weight: 400;
     line-height: 56px;
     margin: 0;
-    padding: 0 15px;
+    user-select: none;
 }
 
 .header nav {
@@ -32,7 +33,6 @@
     height: 56px;
     line-height: 56px;
     min-width: 50px;
-    padding: 0 15px;
     text-align: center;
     text-decoration: none;
     will-change: background-color;
@@ -45,4 +45,17 @@
 
 .header nav a.active {
     background: rgba(0, 0, 0, 0.4);
+}
+
+header div {
+    align-self: center;
+    height: 80%;
+    margin: 0.6%;
+    margin-right: 0.3%;
+    user-select: none;
+
+    img {
+        max-height: 100%;
+        width: auto;
+    }
 }
