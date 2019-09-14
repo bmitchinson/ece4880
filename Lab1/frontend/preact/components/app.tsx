@@ -25,14 +25,14 @@ export default class App extends Component<MyProps, MyState> {
                 <Header />
                 <div style={{ width: '100%', height: '96px' }} />
                 <Grid columns={1} minRowHeight="80px" gap="50px">
-                    <Cell center middle height={2}>
-                        <Card style={{ height: '100%', width: '90%', borderRadius: '10px' }} />
+                    <Cell center height={2}>
+                        <Card style={{ height: '100%', width: '90%', marginLeft: '5%', marginRight: '5%', borderRadius: '10px' }} />
                     </Cell>
                     <Cell center middle height={1}>
-                        <Card style={{ height: '100%', width: '90%', borderRadius: '10px' }} />
+                        <Card style={{ height: '100%', width: '90%', marginLeft: '5%', marginRight: '5%', borderRadius: '10px' }} />
                     </Cell>
                     <Cell center middle height={1}>
-                        <Card style={{ height: '100%', width: '90%', borderRadius: '10px' }} />
+                        <Card style={{ height: '100%', width: '90%', marginLeft: '5%', marginRight: '5%', borderRadius: '10px' }} />
                     </Cell>
                 </Grid>
                 <div style={{ width: '100%', height: '96px' }} />
