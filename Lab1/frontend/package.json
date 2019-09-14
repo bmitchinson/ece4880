@@ -22,6 +22,7 @@
         "preact": "^8.2.6",
         "preact-compat": "^3.17.0",
         "preact-fluid": "^0.9.1",
+        "preact-mui": "^0.1.1",
         "preact-render-to-string": "^4.1.0",
         "preact-router": "^2.6.1"
     },
