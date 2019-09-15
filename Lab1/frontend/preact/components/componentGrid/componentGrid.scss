@@ -1,9 +1,41 @@
 .Grid {
-    background-color: pink;
-    height: 10%;
-    margin-bottom: 3%;
-    margin-left: 5%;
-    margin-right: 5%;
-    margin-top: 3%;
+    display: grid;
+    gap: 30px;
+    grid-template-areas: 't g g g' 'c c c c';
+
+    @media only screen and (max-width: 1028px) {
+        grid-template-areas: 't' 'g' 'c';
+    }
+
+    margin: 5% auto;
+    max-width: 1250px;
     width: 90%;
+}
+
+.TempCard {
+    border-radius: 10px;
+    grid-area: t;
+    height: 225px;
+    @media only screen and (max-width: 1028px) {
+        height: 180px;
+        line-height: 140px;
+    }
+    line-height: 180px;
+    text-align: center;
+}
+
+.GraphCard {
+    border-radius: 10px;
+    grid-area: g;
+    height: 225px;
+    line-height: 180px;
+    text-align: center;
+}
+
+.ControlsCard {
+    border-radius: 10px;
+    grid-area: c;
+    height: 150px;
+    line-height: 110px;
+    text-align: center;
 }
