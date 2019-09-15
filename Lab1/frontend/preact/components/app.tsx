@@ -2,6 +2,8 @@ import { h, Component } from 'preact';
 import { Grid, Cell, Card } from 'preact-fluid';
 
 import Header from './header/header';
+import Footer from './footer/footer';
+import ComponentGrid from './componentGrid/componentGrid';
 
 interface MyProps {}
 interface MyState {}
@@ -23,8 +25,8 @@ export default class App extends Component<MyProps, MyState> {
         return (
             <div id="app">
                 <Header />
-                <div style={{ width: '100%', height: '96px' }} />
-                <Grid columns={1} minRowHeight="80px" gap="50px">
+                <ComponentGrid />
+                {/* <Grid columns={1} minRowHeight="80px" gap="50px">
                     <Cell center height={2}>
                         <Card style={{ height: '100%', width: '90%', marginLeft: '5%', marginRight: '5%', borderRadius: '10px' }} />
                     </Cell>
@@ -34,8 +36,8 @@ export default class App extends Component<MyProps, MyState> {
                     <Cell center middle height={1}>
                         <Card style={{ height: '100%', width: '90%', marginLeft: '5%', marginRight: '5%', borderRadius: '10px' }} />
                     </Cell>
-                </Grid>
-                <div style={{ width: '100%', height: '96px' }} />
+                </Grid> */}
+                <Footer />
             </div>
         );
     }

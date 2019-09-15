@@ -47,7 +47,7 @@
     background: rgba(0, 0, 0, 0.4);
 }
 
-header div {
+.header div {
     align-self: center;
     height: 80%;
     margin: 0.6%;
@@ -58,4 +58,9 @@ header div {
         max-height: 100%;
         width: auto;
     }
+}
+
+.headerpad {
+    height: 56px;
+    width: 100%;
 }
