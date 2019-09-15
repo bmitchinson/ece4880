@@ -18,10 +18,12 @@ $mobileswitch: 805px;
     border-radius: 10px;
     grid-area: t;
     height: 225px;
+
     @media only screen and (max-width: $mobileswitch) {
         height: 180px;
         line-height: 140px;
     }
+
     line-height: 180px;
     text-align: center;
 }
