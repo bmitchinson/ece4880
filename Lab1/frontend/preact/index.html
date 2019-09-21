@@ -25,9 +25,6 @@
     </head>
     <body>
         <%= htmlWebpackPlugin.options.ssr({ url: '/' }) %>
-        <link href="//cdn.muicss.com/mui-0.9.6/css/mui.min.css" rel="stylesheet" 
-        type="text/css" media="screen" />
-        <script src="//cdn.muicss.com/mui-0.9.6/js/mui.min.js"></script>
         <script defer src="<%= htmlWebpackPlugin.files.chunks['bundle'].entry %>"></script>
         <script>
             window.fetch || document.write('<script src="<%= htmlWebpackPlugin.files.chunks["polyfills"].entry %>"><\/script>');
