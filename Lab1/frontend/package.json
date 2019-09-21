@@ -18,6 +18,7 @@
     },
     "homepage": "https://github.com/bmitchinson/ece4880",
     "dependencies": {
+        "firebase": "^6.6.1",
         "mini.css-preact": "^1.0.3",
         "preact": "^8.2.6",
         "preact-compat": "^3.17.0",
