@@ -2,7 +2,6 @@ import { h, Component } from 'preact';
 import { Grid, Cell, Card } from 'preact-fluid';
 
 import Header from './header/header';
-import Footer from './footer/footer';
 import ComponentGrid from './componentGrid/componentGrid';
 
 interface MyProps {}
@@ -26,7 +25,6 @@ export default class App extends Component<MyProps, MyState> {
             <div id="app">
                 <Header />
                 <ComponentGrid />
-                <Footer />
             </div>
         );
     }

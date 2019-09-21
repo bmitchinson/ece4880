@@ -1,0 +1,19 @@
+@import '../../style/variables';
+
+.Temp {
+    font-size: 5em;
+    margin: 0;
+
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        font-size: 3.5em;
+    }
+}
+
+.TempLabel {
+    font-size: 2em;
+    padding-bottom: 0.8em;
+
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        font-size: 1.8em;
+    }
+}

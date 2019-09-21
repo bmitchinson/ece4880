@@ -1,45 +1,41 @@
-$mobileswitch: 805px;
+@import '../../style/variables';
 
 .Grid {
     display: grid;
     gap: 30px;
     grid-template-areas: 't g g g' 'c c c c';
+    grid-template-rows: 18em 13em;
 
-    @media only screen and (max-width: $mobileswitch) {
-        grid-template-areas: 't' 'g' 'c';
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        grid-template-areas: 'g' 't' 'c';
+        grid-template-rows: 14em repeat(2, 10em);
     }
 
     margin: 5% auto;
-    max-width: 1250px;
+    max-width: 1350px;
     width: 90%;
 }
 
-.TempCard {
+// Multiple classes per element? Inline style for grid-area assignment?
+
+.Card {
+    align-items: center;
     border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.TempCard {
     grid-area: t;
-    height: 225px;
-
-    @media only screen and (max-width: $mobileswitch) {
-        height: 180px;
-        line-height: 140px;
-    }
-
-    line-height: 180px;
-    text-align: center;
 }
 
 .GraphCard {
-    border-radius: 10px;
     grid-area: g;
-    height: 225px;
-    line-height: 180px;
-    text-align: center;
 }
 
 .ControlsCard {
-    border-radius: 10px;
     grid-area: c;
-    height: 150px;
-    line-height: 110px;
-    text-align: center;
 }

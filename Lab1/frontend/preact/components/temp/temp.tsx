@@ -1,12 +1,14 @@
 import { h, Component } from 'preact';
 import { database } from '../firebase/firebase';
 
+import style from './temp.scss';
+
 const tempRef = database.collection('temps');
 const tempObj = tempRef.orderBy('time', 'desc').limit(1);
 
 interface MyProps {}
 interface MyState {
-    displayTemp: any;
+    displayTemp: number;
 }
 
 export default class Temp extends Component<MyProps, MyState> {
@@ -18,8 +20,8 @@ export default class Temp extends Component<MyProps, MyState> {
     }
 
     componentDidMount() {
-        tempObj.get().then(snap => {
-            snap.forEach(doc => {
+        tempObj.onSnapshot(snapShot => {
+            snapShot.forEach(doc => {
                 const temp = doc.data().temp.toFixed(1);
                 this.setState({ displayTemp: temp });
             });
@@ -27,6 +29,11 @@ export default class Temp extends Component<MyProps, MyState> {
     }
 
     render() {
-        return <h2>{this.state.displayTemp}</h2>;
+        return (
+            <div>
+                <header class={style.TempLabel}>Current Temp:</header>
+                <p class={style.Temp}>{this.state.displayTemp}°C</p>
+            </div>
+        );
     }
 }
