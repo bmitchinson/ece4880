@@ -15,7 +15,7 @@ export default class Temp extends Component<MyProps, MyState> {
     constructor() {
         super();
         this.state = {
-            displayTemp: 0
+            displayTemp: null
         };
     }
 
@@ -29,10 +29,12 @@ export default class Temp extends Component<MyProps, MyState> {
     }
 
     render() {
+        const currentTemp = this.state.displayTemp;
+        const tempText = currentTemp ? currentTemp + '°C' : '--';
         return (
             <div>
                 <header class={style.TempLabel}>Current Temp:</header>
-                <p class={style.Temp}>{this.state.displayTemp}°C</p>
+                <p class={style.Temp}>{tempText}</p>
             </div>
         );
     }
