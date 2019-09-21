@@ -3,3 +3,4 @@
 Lab1/pi/lab1-firebase-admin-sdk-key.json
 __pycache__/*
 .env
+.vscode
