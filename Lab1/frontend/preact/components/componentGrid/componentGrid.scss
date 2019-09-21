@@ -21,7 +21,6 @@
     border-radius: 10px;
     display: flex;
     justify-content: center;
-    overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
 }
@@ -36,4 +35,5 @@
 
 .ControlsCard {
     grid-area: c;
+    position: relative;
 }
