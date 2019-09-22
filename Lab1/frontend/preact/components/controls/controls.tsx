@@ -10,7 +10,7 @@ interface MyState {
 }
 
 const theme = {
-    primaryColor: '#72D7C2'
+    primaryColor: '#ffffff'
 };
 
 export default class Controls extends Component<MyProps, MyState> {
@@ -31,24 +31,25 @@ export default class Controls extends Component<MyProps, MyState> {
         });
     }
 
-    // {user && <p>Signed In As: {name}</p>}
-    // <button onClick={() => auth.signOut()}>Sign Out</button>
-
     render() {
-        // const user = this.state.currentUser;
-        // const name = user ? user.displayName : 'No one';
+        const user = this.state.currentUser;
         return (
             <div class={style.Stage}>
-                <div class={style.Over}>
-                    <h3>Sign in to access remote sensor controls</h3>
-                    <Button class={style.Button} theme={theme} primary rounded onClick={() => auth.signInWithRedirect(googleAuthProvider)}>
-                        Sign In
-                    </Button>
-                </div>
-                <div class={style.Middle} />
-                <div class={style.Under}>
-                    <h2>Controls Hidden</h2>
-                </div>
+                {!user && (
+                    <div class={style.Over}>
+                        <h3>Sign in to access remote sensor controls</h3>
+                        <Button class={style.Button} theme={theme} size={'large'} primary onClick={() => auth.signInWithRedirect(googleAuthProvider)}>
+                            Sign In
+                        </Button>
+                    </div>
+                )}
+                {!user && <div class={style.Middle} />}
+                {!user && (
+                    <div class={style.Under}>
+                        <h2>Controls Hidden</h2>
+                    </div>
+                )}
+                {user && <h2>Controls Unlocked</h2>}
             </div>
         );
     }
