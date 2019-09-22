@@ -1,0 +1,18 @@
+.FormContainer {
+    height: 100%;
+    margin-bottom: 2.2em;
+    margin-top: 2.2em;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.InputPad {
+    margin: 1.3em 0;
+}
+
+.FieldsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    margin: 0 1.5em;
+}

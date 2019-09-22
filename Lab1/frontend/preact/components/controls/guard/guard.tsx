@@ -2,13 +2,13 @@ import { h } from 'preact';
 import { auth, googleAuthProvider } from '../../firebase/firebase';
 import { Button } from 'preact-fluid';
 
-import style from './gaurd.scss';
+import style from './guard.scss';
 
 const theme = {
     primaryColor: '#ffffff'
 };
 
-const Gaurd = () => (
+const Guard = () => (
     <div class={style.Stage}>
         <div class={style.Over}>
             <h3>Sign in to access remote sensor controls</h3>
@@ -23,4 +23,4 @@ const Gaurd = () => (
     </div>
 );
 
-export default Gaurd;
+export default Guard;

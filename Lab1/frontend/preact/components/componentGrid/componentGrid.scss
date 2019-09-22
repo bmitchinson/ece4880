@@ -4,11 +4,11 @@
     display: grid;
     gap: 30px;
     grid-template-areas: 't g g g' 'c c c c';
-    grid-template-rows: 18em 13em;
+    grid-template-rows: 18em auto;
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
         grid-template-areas: 'g' 't' 'c';
-        grid-template-rows: 14em repeat(2, 10em);
+        grid-template-rows: 14em 10em auto;
     }
 
     margin: 5% auto;
@@ -21,6 +21,7 @@
     border-radius: 10px;
     display: flex;
     justify-content: center;
+    overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
 }
