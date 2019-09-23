@@ -7,7 +7,19 @@ interface MyProps {
     userPermission?: boolean;
 }
 interface MyState {
-    switch: boolean;
+    submitEnable: boolean;
+    validations: {
+        phoneNumError: string;
+        highTempThreshError: string;
+        lowTempThreshError: string;
+    };
+    inputs: {
+        phoneNumInput: string;
+        highTempMsgInput: string;
+        lowTempMsgInput: string;
+        highTempThreshInput: string;
+        lowTempThreshInput: string;
+    };
 }
 
 const theme = {
@@ -16,32 +28,208 @@ const theme = {
 };
 
 export default class Form extends Component<MyProps, MyState> {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.state = {
-            switch: false
+            submitEnable: false,
+            validations: {
+                phoneNumError: '',
+                highTempThreshError: '',
+                lowTempThreshError: ''
+            },
+            inputs: {
+                phoneNumInput: '',
+                highTempMsgInput: '',
+                lowTempMsgInput: '',
+                highTempThreshInput: '',
+                lowTempThreshInput: ''
+            }
         };
     }
 
-    componentDidMount() {
-        // TODO: Get switch value on construction and set
-        // assign listener on switch in case of disable?
+    enableButtonIfAllValid() {
+        const {
+            phoneNumError,
+            highTempThreshError,
+            lowTempThreshError
+        } = this.state.validations;
+        const {
+            phoneNumInput,
+            highTempMsgInput,
+            lowTempMsgInput,
+            highTempThreshInput,
+            lowTempThreshInput
+        } = this.state.inputs;
+
+        if (
+            !phoneNumError &&
+            !highTempThreshError &&
+            !lowTempThreshError &&
+            phoneNumInput &&
+            highTempMsgInput &&
+            lowTempMsgInput &&
+            highTempThreshInput &&
+            lowTempThreshInput
+        ) {
+            this.setState({ submitEnable: true });
+        } else {
+            this.setState({ submitEnable: false });
+        }
+    }
+
+    handlePhone = (e: any) => {
+        const text: string = e.target.value;
+        this.setState(
+            prev => ({
+                inputs: { ...prev.inputs, phoneNumInput: text }
+            }),
+            () => this.validatePhone()
+        );
+    };
+
+    handleHighMsg = (e: any) => {
+        const text: string = e.target.value;
+        this.setState(
+            prev => ({
+                inputs: { ...prev.inputs, highTempMsgInput: text }
+            }),
+            () => this.enableButtonIfAllValid()
+        );
+    };
+
+    handleLowMsg = (e: any) => {
+        const text: string = e.target.value;
+        this.setState(
+            prev => ({
+                inputs: { ...prev.inputs, lowTempMsgInput: text }
+            }),
+            () => this.enableButtonIfAllValid()
+        );
+    };
+
+    handleHighThresh = (e: any) => {
+        const text: string = e.target.value;
+        this.setState(
+            prev => ({
+                inputs: { ...prev.inputs, highTempThreshInput: text }
+            }),
+            () => this.validateTemps()
+        );
+    };
+
+    handleLowThresh = (e: any) => {
+        const text: string = e.target.value;
+        this.setState(
+            prev => ({
+                inputs: { ...prev.inputs, lowTempThreshInput: text }
+            }),
+            () => this.validateTemps()
+        );
+    };
+
+    validatePhone = () => {
+        const phoneText: string = this.state.inputs.phoneNumInput;
+        const regEx = /^\(?([0-9]{3})\)?[-]?([0-9]{3})[-]?([0-9]{4})$/;
+        const errorMsg: string =
+            !phoneText || phoneText.match(regEx) ? '' : '###-###-####';
+        this.setState(
+            prev => ({
+                validations: {
+                    ...prev.validations,
+                    phoneNumError: errorMsg
+                }
+            }),
+            () => this.enableButtonIfAllValid()
+        );
+    };
+
+    validateTemps = () => {
+        const { lowTempThreshInput, highTempThreshInput } = this.state.inputs;
+        const lowTempError =
+            !lowTempThreshInput || lowTempThreshInput === '41' ? '' : '41';
+        const highTempError =
+            !highTempThreshInput || highTempThreshInput === '41' ? '' : '41';
+        this.setState(
+            prev => ({
+                validations: {
+                    ...prev.validations,
+                    lowTempThreshError: lowTempError,
+                    highTempThreshError: highTempError
+                }
+            }),
+            () => this.enableButtonIfAllValid()
+        );
+    };
+
+    handleSubmit() {
+        console.log('Sent off to google');
     }
 
     render() {
         // const userPermission = this.props.userPermission;
         // const activeStatus = userPermsion && this.state.switch;
+        const submitEnable = this.state.submitEnable;
         const gridPref = { columns: '1fr' };
+        const {
+            phoneNumError,
+            highTempThreshError,
+            lowTempThreshError
+        } = this.state.validations;
         return (
             <div class={style.FormContainer}>
                 <h2>Notification Controls:</h2>
                 <div class={style.FieldsContainer}>
-                    <TextField className={style.InputPad} hideLabel placeholder="Phone #" grid={gridPref} />
-                    <TextField className={style.InputPad} hideLabel placeholder="Hight Temp Alert Message" grid={gridPref} />
-                    <TextField className={style.InputPad} hideLabel placeholder="Low Temp Alert Message" grid={gridPref} />
-                    <TextField className={style.InputPad} hideLabel placeholder="High Temp Threshold" grid={gridPref} />
-                    <TextField className={style.InputPad} hideLabel placeholder="Low Temp Threshold" grid={gridPref} />
-                    <Button className={style.InputPad} theme={theme} size={'large'} primary>
+                    <TextField
+                        className={style.InputPad}
+                        hideLabel
+                        errorText={phoneNumError}
+                        placeholder="Phone #"
+                        grid={gridPref}
+                        onChange={this.handlePhone}
+                        value={this.state.inputs.phoneNumInput}
+                    />
+                    <TextField
+                        className={style.InputPad}
+                        hideLabel
+                        placeholder="High Temp Alert Message"
+                        grid={gridPref}
+                        onChange={this.handleHighMsg}
+                        value={this.state.inputs.highTempMsgInput}
+                    />
+                    <TextField
+                        className={style.InputPad}
+                        hideLabel
+                        placeholder="Low Temp Alert Message"
+                        grid={gridPref}
+                        onChange={this.handleLowMsg}
+                        value={this.state.inputs.lowTempMsgInput}
+                    />
+                    <TextField
+                        className={style.InputPad}
+                        errorText={highTempThreshError}
+                        hideLabel
+                        placeholder="High Temp Threshold"
+                        grid={gridPref}
+                        onChange={this.handleHighThresh}
+                        value={this.state.inputs.highTempThreshInput}
+                    />
+                    <TextField
+                        className={style.InputPad}
+                        errorText={lowTempThreshError}
+                        hideLabel
+                        placeholder="Low Temp Threshold"
+                        grid={gridPref}
+                        onChange={this.handleLowThresh}
+                        value={this.state.inputs.lowTempThreshInput}
+                    />
+                    <Button
+                        className={style.InputPad}
+                        onClick={this.handleSubmit}
+                        disabled={!submitEnable}
+                        theme={theme}
+                        size={'large'}
+                        primary
+                    >
                         Submit
                     </Button>
                 </div>
