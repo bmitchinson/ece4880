@@ -4,7 +4,7 @@ import { TextField, Button } from 'preact-fluid';
 import style from './form.scss';
 
 interface MyProps {
-    userPermission?: boolean;
+    userIsNotAuth?: boolean;
 }
 interface MyState {
     submitEnable: boolean;
@@ -176,8 +176,8 @@ export default class Form extends Component<MyProps, MyState> {
     }
 
     render() {
-        // const userPermission = this.props.userPermission;
-        // const activeStatus = userPermsion && this.state.switch;
+        const userIsNotAuth = this.props.userIsNotAuth;
+        // const submitEnable = userIsAuth && this.state.submitEnable;
         const submitEnable = this.state.submitEnable;
         const gridPref = { columns: '1fr' };
         const {
@@ -197,6 +197,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handlePhone}
                         value={this.state.inputs.phoneNumInput}
+                        disabled={userIsNotAuth}
                     />
                     <TextField
                         className={style.InputPad}
@@ -205,6 +206,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleHighMsg}
                         value={this.state.inputs.highTempMsgInput}
+                        disabled={userIsNotAuth}
                     />
                     <TextField
                         className={style.InputPad}
@@ -213,6 +215,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleLowMsg}
                         value={this.state.inputs.lowTempMsgInput}
+                        disabled={userIsNotAuth}
                     />
                     <TextField
                         className={style.InputPad}
@@ -222,6 +225,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleHighThresh}
                         value={this.state.inputs.highTempThreshInput}
+                        disabled={userIsNotAuth}
                     />
                     <TextField
                         className={style.InputPad}
@@ -231,6 +235,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleLowThresh}
                         value={this.state.inputs.lowTempThreshInput}
+                        disabled={userIsNotAuth}
                     />
                     <Button
                         className={style.InputPad}

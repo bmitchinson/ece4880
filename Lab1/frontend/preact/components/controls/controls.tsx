@@ -20,13 +20,13 @@ export default class Controls extends Component<MyProps, MyState> {
     componentDidMount() {
         auth.onAuthStateChanged(currentUser => {
             this.setState({ currentUser });
-            // Could add callback that verifies their auth status + sets permission
-            // to false
+            // TODO: add callback that gets auth status + sets userIsNotAuth
         });
     }
 
     render() {
         const user = this.state.currentUser;
-        return user ? <Form userPermission /> : <Guard />;
+        const userIsNotAuth = false; // TODO: this.state.userIsNotAuth
+        return user ? <Form userIsNotAuth={userIsNotAuth} /> : <Guard />;
     }
 }
