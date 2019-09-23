@@ -146,9 +146,19 @@ export default class Form extends Component<MyProps, MyState> {
     validateTemps = () => {
         const { lowTempThreshInput, highTempThreshInput } = this.state.inputs;
         const lowTempError =
-            !lowTempThreshInput || lowTempThreshInput === '41' ? '' : '41';
+            !lowTempThreshInput ||
+            (parseInt(lowTempThreshInput) >= -15 &&
+                parseInt(lowTempThreshInput) <= 50 &&
+                !lowTempThreshInput.match(/[^0-9\-]/))
+                ? ''
+                : 'Enter # between -10 and 50';
         const highTempError =
-            !highTempThreshInput || highTempThreshInput === '41' ? '' : '41';
+            !highTempThreshInput ||
+            (parseInt(highTempThreshInput) >= -15 &&
+                parseInt(highTempThreshInput) <= 50 &&
+                !highTempThreshInput.match(/[^0-9\-]/))
+                ? ''
+                : 'Enter # between -10 and 50';
         this.setState(
             prev => ({
                 validations: {
