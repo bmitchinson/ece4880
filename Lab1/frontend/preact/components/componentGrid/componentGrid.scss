@@ -8,7 +8,7 @@
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
         grid-template-areas: 'g' 't' 'c';
-        grid-template-rows: 14em 10em auto;
+        grid-template-rows: 14em auto auto;
     }
 
     margin: 5% auto;

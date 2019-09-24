@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
 import { database } from '../firebase/firebase';
+import { Radio, RadioGroup } from 'preact-fluid';
 
 import style from './temp.scss';
 
@@ -14,6 +15,8 @@ interface MyState {
     displayTemp: number;
     sensorIsDisconnected: boolean;
     switchIsOn: boolean;
+    cButton: boolean;
+    fButton: boolean;
 }
 
 export default class Temp extends Component<MyProps, MyState> {
@@ -22,7 +25,9 @@ export default class Temp extends Component<MyProps, MyState> {
         this.state = {
             displayTemp: null,
             sensorIsDisconnected: false,
-            switchIsOn: true
+            switchIsOn: true,
+            cButton: true,
+            fButton: false
         };
     }
 
@@ -43,7 +48,38 @@ export default class Temp extends Component<MyProps, MyState> {
         });
     }
 
-    render() {
+    toggleFButtton = () => {
+        if (!this.state.fButton || this.state.cButton) {
+            this.setState(
+                { fButton: !this.state.fButton },
+                this.toggleCButtton
+            );
+        }
+    };
+
+    toggleCButtton = () => {
+        if (!this.state.cButton || this.state.fButton) {
+            this.setState(
+                { cButton: !this.state.cButton },
+                this.toggleFButtton
+            );
+        }
+    };
+
+    getTempText = () => {
+        if (!this.state.displayTemp) {
+            return '--°C';
+        }
+        if (this.state.sensorIsDisconnected || !this.state.switchIsOn) {
+            return '--';
+        }
+        const celTemp = this.state.displayTemp;
+        const fButton = this.state.fButton;
+        const tempText = fButton ? (celTemp * 9) / 5 + 32 : celTemp;
+        return fButton ? tempText.toFixed(1) + '°F' : tempText + '°C';
+    };
+
+    getTempHeaderText = () => {
         let tempHeader = 'Current Temp:';
         if (this.state.sensorIsDisconnected) {
             tempHeader = 'Unplugged Sensor';
@@ -51,16 +87,35 @@ export default class Temp extends Component<MyProps, MyState> {
         if (!this.state.switchIsOn) {
             tempHeader = 'No Data Available (Switch Off)';
         }
-        const currentTemp = this.state.displayTemp;
-        const tempText =
-            currentTemp && tempHeader === 'Current Temp:'
-                ? currentTemp + '°C'
-                : '--';
-        console.log(this.state, tempHeader, tempText);
+        return tempHeader;
+    };
+
+    render() {
         return (
             <div>
-                <header class={style.TempLabel}>{tempHeader}</header>
-                <p class={style.Temp}>{tempText}</p>
+                <header class={style.TempLabel}>
+                    {this.getTempHeaderText()}
+                </header>
+                <p class={style.Temp}>{this.getTempText()}</p>
+                <div class={style.Buttons}>
+                    <Radio
+                        checked={this.state.cButton}
+                        value="Celsius"
+                        label="Celsius"
+                        bgColor="#90d7c2"
+                        effect="circle"
+                        onChange={this.toggleCButtton}
+                    />
+                    <div class={style.Space} />
+                    <Radio
+                        checked={this.state.fButton}
+                        value="Fahrenheit"
+                        label="Fahrenheit"
+                        bgColor="#90d7c2"
+                        effect="circle"
+                        onChange={this.toggleFButtton}
+                    />
+                </div>
             </div>
         );
     }

@@ -11,9 +11,21 @@
 
 .TempLabel {
     font-size: 2em;
-    padding-bottom: 0.8em;
+    padding: 0.8em 0;
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
         font-size: 1.8em;
     }
+}
+
+.Buttons {
+    display: flex;
+    flex-wrap: warp;
+    justify-content: space-around;
+    padding: 1.2em 0;
+    width: 100%;
+}
+
+.Space {
+    width: 2em;
 }

@@ -172,7 +172,7 @@ export default class Form extends Component<MyProps, MyState> {
     };
 
     handleSubmit() {
-        console.log('Sent off to google');
+        console.log('*Sent off to google*');
     }
 
     render() {
