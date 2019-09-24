@@ -66,6 +66,12 @@ def update_display_process(state):
         current_temp = state["current_temp"]
         # display the current temperature
 
+def hardware_io_process(state):
+    # lol we should figure this out....
+    while True:
+        print('hardware sucks')
+        sleep(SLEEP_DURATION)
+
 
 def main():
     with Manager() as manager:
@@ -82,6 +88,7 @@ def main():
                 Process(target=read_and_send_temp_process, args=(state_dict,)),
                 Process(target=update_state_process, args=(state_dict,)),
                 Process(target=update_display_process, args=(state_dict,)),
+                Process(target=hardware_io_process, args=(state_dict,)),
             ]
             [p.start() for p in processes]
             [p.join() for p in processes]
