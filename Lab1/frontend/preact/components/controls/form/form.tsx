@@ -5,6 +5,7 @@ import { database } from '../../firebase/firebase';
 import style from './form.scss';
 
 const buttonRef = database.collection('toggles').doc('button');
+const textingRef = database.collection('texting').doc('prefs');
 
 interface MyProps {
     userIsNotAuth?: boolean;
@@ -101,7 +102,7 @@ export default class Form extends Component<MyProps, MyState> {
     };
 
     relayButtonIsPressted = () => {
-        buttonRef.set({
+        buttonRef.update({
             isPressed: this.state.buttonIsPressed
         });
     };
@@ -199,10 +200,27 @@ export default class Form extends Component<MyProps, MyState> {
             () => this.enableButtonIfAllValid()
         );
     };
-
-    handleSubmit() {
-        console.log('*Sent off to google*');
-    }
+    /* eslint-disable @typescript-eslint/camelcase */
+    handleSubmit = () => {
+        console.log('Setting state');
+        const {
+            highTempMsgInput,
+            lowTempMsgInput,
+            lowTempThreshInput,
+            highTempThreshInput,
+            phoneNumInput
+        } = this.state.inputs;
+        textingRef
+            .update({
+                high_msg: highTempMsgInput,
+                low_msg: lowTempMsgInput,
+                tow_temp: lowTempThreshInput,
+                max_temp: highTempThreshInput,
+                phonenumber: phoneNumInput
+            })
+            .then(() => console.log('set state'));
+    };
+    /* eslint-enable @typescript-eslint/camelcase */
 
     render() {
         const userIsNotAuth = this.props.userIsNotAuth;
