@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { database } from '../firebase/firebase';
-import { Radio, RadioGroup } from 'preact-fluid';
+import { Radio } from 'preact-fluid';
 
 import style from './temp.scss';
 

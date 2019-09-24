@@ -1,7 +1,10 @@
 import { h, Component } from 'preact';
-import { TextField, Button } from 'preact-fluid';
+import { TextField, Button, Radio } from 'preact-fluid';
+import { database } from '../../firebase/firebase';
 
 import style from './form.scss';
+
+const buttonRef = database.collection('toggles').doc('button');
 
 interface MyProps {
     userIsNotAuth?: boolean;
@@ -20,6 +23,7 @@ interface MyState {
         highTempThreshInput: string;
         lowTempThreshInput: string;
     };
+    buttonIsPressed: boolean;
 }
 
 const theme = {
@@ -43,8 +47,20 @@ export default class Form extends Component<MyProps, MyState> {
                 lowTempMsgInput: '',
                 highTempThreshInput: '',
                 lowTempThreshInput: ''
-            }
+            },
+            buttonIsPressed: false
         };
+    }
+
+    componentDidMount() {
+        buttonRef.onSnapshot(doc => {
+            const buttonIsPressed = doc.data().buttonIsPressed;
+            this.setState(prev => ({ ...prev, buttonIsPressed }));
+        });
+        buttonRef.onSnapshot(doc => {
+            const buttonIsPressed = doc.data().isPressed;
+            this.setState({ buttonIsPressed });
+        });
     }
 
     enableButtonIfAllValid() {
@@ -76,6 +92,19 @@ export default class Form extends Component<MyProps, MyState> {
             this.setState({ submitEnable: false });
         }
     }
+
+    toggleLcd = () => {
+        this.setState(
+            { buttonIsPressed: !this.state.buttonIsPressed },
+            this.relayButtonIsPressted
+        );
+    };
+
+    relayButtonIsPressted = () => {
+        buttonRef.set({
+            isPressed: this.state.buttonIsPressed
+        });
+    };
 
     handlePhone = (e: any) => {
         const text: string = e.target.value;
@@ -237,16 +266,27 @@ export default class Form extends Component<MyProps, MyState> {
                         value={this.state.inputs.lowTempThreshInput}
                         disabled={userIsNotAuth}
                     />
-                    <Button
-                        className={style.InputPad}
-                        onClick={this.handleSubmit}
-                        disabled={!submitEnable}
-                        theme={theme}
-                        size={'large'}
-                        primary
-                    >
-                        Submit
-                    </Button>
+                    <div className={style.BottomRow}>
+                        <Radio
+                            className={style.InputPad}
+                            checked={this.state.buttonIsPressed}
+                            value="lcdChecked"
+                            label="LCD On"
+                            bgColor="#90d7c2"
+                            effect="circle"
+                            onChange={this.toggleLcd}
+                        />
+                        <Button
+                            className={style.ButtonPad}
+                            onClick={this.handleSubmit}
+                            disabled={!submitEnable}
+                            theme={theme}
+                            size={'large'}
+                            primary
+                        >
+                            Submit
+                        </Button>
+                    </div>
                 </div>
             </div>
         );

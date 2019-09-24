@@ -10,6 +10,17 @@
     margin: 1.3em 0 0 0;
 }
 
+.ButtonPad {
+    align-self: flex-end;
+    margin: 1.3em 0 0 1.9em;
+}
+
+.BottomRow {
+    display: flex;
+    flex-wrap: wrap;
+    width: 15em;
+}
+
 .FieldsContainer {
     display: flex;
     flex-wrap: wrap;
