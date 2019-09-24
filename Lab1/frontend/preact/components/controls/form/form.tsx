@@ -8,7 +8,8 @@ const buttonRef = database.collection('toggles').doc('button');
 const textingRef = database.collection('texting').doc('prefs');
 
 interface MyProps {
-    userIsNotAuth?: boolean;
+    userCanWrite: boolean;
+    userSignedIn: boolean;
 }
 interface MyState {
     submitEnable: boolean;
@@ -77,6 +78,7 @@ export default class Form extends Component<MyProps, MyState> {
             highTempThreshInput,
             lowTempThreshInput
         } = this.state.inputs;
+        const userCanWrite = this.props.userCanWrite;
 
         if (
             !phoneNumError &&
@@ -86,7 +88,8 @@ export default class Form extends Component<MyProps, MyState> {
             highTempMsgInput &&
             lowTempMsgInput &&
             highTempThreshInput &&
-            lowTempThreshInput
+            lowTempThreshInput &&
+            userCanWrite
         ) {
             this.setState({ submitEnable: true });
         } else {
@@ -202,7 +205,6 @@ export default class Form extends Component<MyProps, MyState> {
     };
     /* eslint-disable @typescript-eslint/camelcase */
     handleSubmit = () => {
-        console.log('Setting state');
         const {
             highTempMsgInput,
             lowTempMsgInput,
@@ -210,21 +212,19 @@ export default class Form extends Component<MyProps, MyState> {
             highTempThreshInput,
             phoneNumInput
         } = this.state.inputs;
-        textingRef
-            .update({
-                high_msg: highTempMsgInput,
-                low_msg: lowTempMsgInput,
-                tow_temp: lowTempThreshInput,
-                max_temp: highTempThreshInput,
-                phonenumber: phoneNumInput
-            })
-            .then(() => console.log('set state'));
+        textingRef.update({
+            high_msg: highTempMsgInput,
+            low_msg: lowTempMsgInput,
+            tow_temp: lowTempThreshInput,
+            max_temp: highTempThreshInput,
+            phonenumber: phoneNumInput
+        });
     };
     /* eslint-enable @typescript-eslint/camelcase */
 
     render() {
-        const userIsNotAuth = this.props.userIsNotAuth;
-        // const submitEnable = userIsAuth && this.state.submitEnable;
+        const userCanWrite = this.props.userCanWrite;
+        const userSignedIn = this.props.userSignedIn;
         const submitEnable = this.state.submitEnable;
         const gridPref = { columns: '1fr' };
         const {
@@ -234,7 +234,10 @@ export default class Form extends Component<MyProps, MyState> {
         } = this.state.validations;
         return (
             <div class={style.FormContainer}>
-                <h2>Notification Controls:</h2>
+                {userCanWrite && <h2>Notification Controls:</h2>}
+                {userSignedIn && !userCanWrite && (
+                    <h2>Account not authorized to write</h2>
+                )}
                 <div class={style.FieldsContainer}>
                     <TextField
                         className={style.InputPad}
@@ -244,7 +247,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handlePhone}
                         value={this.state.inputs.phoneNumInput}
-                        disabled={userIsNotAuth}
+                        disabled={!userCanWrite}
                     />
                     <TextField
                         className={style.InputPad}
@@ -253,7 +256,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleHighMsg}
                         value={this.state.inputs.highTempMsgInput}
-                        disabled={userIsNotAuth}
+                        disabled={!userCanWrite}
                     />
                     <TextField
                         className={style.InputPad}
@@ -262,7 +265,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleLowMsg}
                         value={this.state.inputs.lowTempMsgInput}
-                        disabled={userIsNotAuth}
+                        disabled={!userCanWrite}
                     />
                     <TextField
                         className={style.InputPad}
@@ -272,7 +275,7 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleHighThresh}
                         value={this.state.inputs.highTempThreshInput}
-                        disabled={userIsNotAuth}
+                        disabled={!userCanWrite}
                     />
                     <TextField
                         className={style.InputPad}
@@ -282,12 +285,13 @@ export default class Form extends Component<MyProps, MyState> {
                         grid={gridPref}
                         onChange={this.handleLowThresh}
                         value={this.state.inputs.lowTempThreshInput}
-                        disabled={userIsNotAuth}
+                        disabled={!userCanWrite}
                     />
                     <div className={style.BottomRow}>
                         <Radio
                             className={style.InputPad}
                             checked={this.state.buttonIsPressed}
+                            disabled={!submitEnable}
                             value="lcdChecked"
                             label="LCD On"
                             bgColor="#90d7c2"

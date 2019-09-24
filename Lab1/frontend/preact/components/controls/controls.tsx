@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { auth } from '../firebase/firebase';
+import { auth, database } from '../firebase/firebase';
 
 import Guard from './guard/guard';
 import Form from './form/form';
@@ -7,26 +7,52 @@ import Form from './form/form';
 interface MyProps {}
 interface MyState {
     currentUser: any;
+    userCanWrite: boolean;
 }
 
 export default class Controls extends Component<MyProps, MyState> {
     constructor() {
         super();
         this.state = {
-            currentUser: null
+            currentUser: null,
+            userCanWrite: false
         };
     }
 
     componentDidMount() {
         auth.onAuthStateChanged(currentUser => {
-            this.setState({ currentUser });
-            // TODO: add callback that gets auth status + sets userIsNotAuth
+            console.log('auth state changed');
+            this.setState({ currentUser }, this.checkIfUserCanWrite);
         });
     }
 
-    render() {
+    checkIfUserCanWrite() {
         const user = this.state.currentUser;
-        const userIsNotAuth = false; // TODO: this.state.userIsNotAuth
-        return user ? <Form userIsNotAuth={userIsNotAuth} /> : <Guard />;
+        if (user) {
+            console.log('user logged in, checking if they can write');
+            const uid = user.uid;
+            console.log('User token:', uid);
+            const currentUserDocRef = database.collection('auth').doc(uid);
+            currentUserDocRef.get().then(doc => {
+                if (doc.exists) {
+                    this.setState({ userCanWrite: doc.data().canWrite });
+                } else {
+                    console.log("user in but can't write");
+                }
+            });
+        } else {
+            console.log("user not logged in so, can't write");
+            this.setState({ userCanWrite: false });
+        }
+    }
+
+    render() {
+        const userSignedIn = this.state.currentUser && true;
+        const userCanWrite = this.state.userCanWrite;
+        return userSignedIn ? (
+            <Form userCanWrite={userCanWrite} userSignedIn={userSignedIn} />
+        ) : (
+            <Guard />
+        );
     }
 }
