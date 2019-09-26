@@ -291,7 +291,7 @@ export default class Form extends Component<MyProps, MyState> {
                         <Radio
                             className={style.InputPad}
                             checked={this.state.buttonIsPressed}
-                            disabled={!submitEnable}
+                            disabled={!userCanWrite}
                             value="lcdChecked"
                             label="LCD On"
                             bgColor="#90d7c2"
