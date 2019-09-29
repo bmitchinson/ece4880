@@ -3,7 +3,7 @@
 .Grid {
     display: grid;
     gap: 30px;
-    grid-template-areas: 't g g g' 'c c c c';
+    grid-template-areas: 't g g g ' 'c c c c';
     grid-template-rows: 18em auto;
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
