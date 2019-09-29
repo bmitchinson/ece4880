@@ -11,13 +11,13 @@ export default class Graph extends Component<MyProps, MyState> {
     constructor() {
         super();
         const dataArray = [];
-        // for (let i = 0; i < 5; i += 1) {
-        //     const now = new Date();
-        //     dataArray.push({
-        //         timestamp: now.setSeconds(now.getSeconds() - i),
-        //         temp: Math.random() * 60 - 10
-        //     });
-        // }
+        for (let i = 0; i < 5; i += 1) {
+            const now = new Date();
+            dataArray.push({
+                timestamp: now.setSeconds(now.getSeconds() - i),
+                temp: Math.random() * 60 - 10
+            });
+        }
         this.state = {
             dataArray
         };
@@ -42,3 +42,8 @@ export default class Graph extends Component<MyProps, MyState> {
         );
     }
 }
+// import { h } from 'preact';
+
+// const Graph = () => <h2>Graph</h2>;
+
+// export default Graph;

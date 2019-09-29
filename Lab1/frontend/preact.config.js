@@ -17,6 +17,8 @@ export default function(config, env, helpers) {
         __dirname,
         'preact/index.js'
     );
-    let { index } = helpers.getPluginsByName(config, 'UglifyJsPlugin')[0];
-    config.plugins.splice(index, 1);
+    if (env.production) {
+        let { index } = helpers.getPluginsByName(config, 'UglifyJsPlugin')[0];
+        config.plugins.splice(index, 1);
+    }
 }
