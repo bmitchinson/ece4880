@@ -18,7 +18,7 @@ export default class Graph extends Component<MyProps, MyState> {
     }
 
     componentDidMount() {
-        setInterval(this.addNewPoint, 2000);
+        setInterval(this.addNewPoint, 1000);
     }
 
     addNewPoint = () => {
@@ -42,8 +42,6 @@ export default class Graph extends Component<MyProps, MyState> {
         const { dataArray, dataCoverArray } = this.state;
         dataArray[0].temp = 0;
         dataArray[1].temp = 50;
-        boundDataArray(dataArray);
-        boundDataArray(dataCoverArray);
 
         return (
             <TrendChart
@@ -52,7 +50,7 @@ export default class Graph extends Component<MyProps, MyState> {
                 name="Temps"
                 x="timestamp"
                 y="temp"
-                data={dataArray}
+                data={getBoundedDataArray(dataArray)}
                 dataSetTwo={dataCoverArray}
                 margin={{ top: 60, right: 80, left: 80, bottom: 60 }}
                 axisControl={false}
@@ -62,28 +60,21 @@ export default class Graph extends Component<MyProps, MyState> {
     }
 }
 
-const boundDataArray = array => {
-    array.map(val => {
+const getBoundedDataArray = array => {
+    return array.map(val => {
         if (val.temp > 50) {
-            val.temp = 50;
-        }
-        if (val.temp < 0) {
-            val.temp = 0;
-        }
+            return {
+                timestamp: new Date(val.timestamp),
+                temp: 50
+            };
+        } else if (val.temp < 0) {
+            return {
+                timestamp: new Date(val.timestamp),
+                temp: 0
+            };
+        } else return val;
     });
 };
-
-// const getBoundedDataArray = array => {
-//     return array.map(val => {
-//         if (val.temp > 50) {
-//             return 50;
-//         }
-//         if (val.temp < 0) {
-//             return 0;
-//         }
-//         return val;
-//     });
-// };
 
 const getFakeDataOne = () => {
     const dataArray = [];
@@ -117,6 +108,8 @@ const getFakeDataOne = () => {
 
 const getCoverArray = dataArray => {
     const dataCoverArray = [];
+    console.log('getCoverGot', dataArray);
+
     dataCoverArray.push({
         timestamp: dataArray[0].timestamp,
         temp: 0
@@ -125,43 +118,49 @@ const getCoverArray = dataArray => {
         timestamp: dataArray[dataArray.length - 1].timestamp,
         temp: 0
     });
+
     dataArray.forEach((ele, index, dataArray) => {
-        if (
-            index !== 0 &&
-            ele.temp === -100 &&
-            dataArray[index - 1].temp !== -100
-        ) {
+        const canLookBehind: boolean = index !== 0;
+        const canLookAhead: boolean = index !== dataArray.length - 1;
+        const isNeg100: boolean = ele.temp === -100;
+
+        if (isNeg100 && canLookBehind && dataArray[index - 1].temp !== -100) {
+            const pastTemp = dataArray[index - 1].temp;
+            const pastTimestamp = dataArray[index - 1].timestamp;
+            const shiftTimestamp = new Date(pastTimestamp);
+            shiftTimestamp.setMilliseconds(pastTimestamp.getMilliseconds() - 2);
+
             dataCoverArray.push({
-                timestamp: dataArray[index - 1].timestamp.setMilliseconds(
-                    dataArray[index - 1].timestamp.getMilliseconds() - 2
-                ),
+                timestamp: shiftTimestamp,
                 temp: 0
             });
             dataCoverArray.push({
-                timestamp: dataArray[index - 1].timestamp,
-                temp: dataArray[index - 1].temp
+                timestamp: pastTimestamp,
+                temp: pastTemp
             });
             dataCoverArray.push({
                 timestamp: ele.timestamp,
                 temp: 0
             });
         } else if (
-            index !== dataArray.length - 1 &&
-            ele.temp === -100 &&
+            isNeg100 &&
+            canLookAhead &&
             dataArray[index + 1].temp !== -100
         ) {
+            const nextTemp = dataArray[index + 1].temp;
+            const nextTimestamp = dataArray[index + 1].timestamp;
+            const shiftTimestamp = new Date(nextTimestamp);
+            shiftTimestamp.setMilliseconds(nextTimestamp.getMilliseconds() + 2);
             dataCoverArray.push({
                 timestamp: ele.timestamp,
                 temp: 0
             });
             dataCoverArray.push({
-                timestamp: dataArray[index + 1].timestamp,
-                temp: dataArray[index + 1].temp
+                timestamp: nextTimestamp,
+                temp: nextTemp
             });
             dataCoverArray.push({
-                timestamp: dataArray[index + 1].timestamp.setMilliseconds(
-                    dataArray[index + 1].timestamp.getMilliseconds() + 2
-                ),
+                timestamp: shiftTimestamp,
                 temp: 0
             });
         }
