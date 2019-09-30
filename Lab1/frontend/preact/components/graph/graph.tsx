@@ -2,6 +2,8 @@ import { h, Component } from 'preact';
 import { database } from '../firebase/firebase';
 import { TrendChart, TimestampArray } from 'preact-charts';
 
+import style from './graph.scss';
+
 interface MyProps {}
 interface MyState {
     dataArray: TimestampArray;
@@ -21,7 +23,7 @@ export default class Graph extends Component<MyProps, MyState> {
     }
 
     componentDidMount() {
-        setInterval(this.addNewPoint, 1000);
+        //setInterval(this.addNewPoint, 1000);
     }
 
     addNewPoint = () => {
@@ -47,18 +49,28 @@ export default class Graph extends Component<MyProps, MyState> {
         dataArray[1].temp = UPPER_BOUND;
 
         return (
-            <TrendChart
-                lineColour="#90d7c2"
-                lineColourTwo="#ffffff"
-                name="Temps"
-                x="timestamp"
-                y="temp"
-                data={getBoundedDataArray(dataArray)}
-                dataSetTwo={getBoundedDataArray(dataCoverArray)}
-                margin={{ top: 60, right: 80, left: 80, bottom: 60 }}
-                axisControl={false}
-                tooltip={false}
-            />
+            <div class={style.ContainGraph}>
+                <div class={style.ContainChart}>
+                    <TrendChart
+                        lineColour="#90d7c2"
+                        lineColourTwo="#ffffff"
+                        name="Temps"
+                        x="timestamp"
+                        y="temp"
+                        data={getBoundedDataArray(dataArray)}
+                        dataSetTwo={getBoundedDataArray(dataCoverArray)}
+                        margin={{ top: 20, right: 20, left: 40, bottom: 10 }}
+                        axisControl={false}
+                        tooltip={false}
+                    />
+                </div>
+                <div class={style.XAxisItems}>
+                    <div class={style.XAxisItem}>150</div>
+                </div>
+                <div class={style.XAxisLabels}>
+                    <div class={style.XAxisLabel}>(Seconds Ago)</div>
+                </div>
+            </div>
         );
     }
 }
