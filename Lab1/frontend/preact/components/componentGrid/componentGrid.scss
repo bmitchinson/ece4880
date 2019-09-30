@@ -5,12 +5,12 @@
     gap: 30px;
     grid-template-areas: 't g g g ' 'c c c c';
     grid-template-rows: auto auto;
-    grid-template-columns: 18em auto auto auto;
+    grid-template-columns: 18em 20em 20em 20em;
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
         grid-template-areas: 'g' 't' 'c';
         grid-template-rows: auto auto auto;
-        grid-template-columns: auto;
+        grid-template-columns: 100%;
     }
 
     margin: 5% auto;
