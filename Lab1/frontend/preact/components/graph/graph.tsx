@@ -13,14 +13,12 @@ export default class Graph extends Component<MyProps, MyState> {
         super();
         const dataArray = getFakeDataOne();
         const dataCoverArray = getCoverArray(dataArray);
-        boundedDataArray(dataArray);
-        boundedDataArray(dataCoverArray);
 
         this.state = { dataArray, dataCoverArray };
     }
 
     componentDidMount() {
-        // setTimeout(this.addNewPoint, 3000);
+        setInterval(this.addNewPoint, 2000);
     }
 
     addNewPoint = () => {
@@ -44,12 +42,9 @@ export default class Graph extends Component<MyProps, MyState> {
         const { dataArray, dataCoverArray } = this.state;
         dataArray[0].temp = 0;
         dataArray[1].temp = 50;
-        // console.log(
-        //     'data:',
-        //     boundedDataArray(dataArray),
-        //     'cover:',
-        //     boundedDataArray(dataCoverArray)
-        // );
+        boundDataArray(dataArray);
+        boundDataArray(dataCoverArray);
+
         return (
             <TrendChart
                 lineColour="#90d7c2"
@@ -67,7 +62,7 @@ export default class Graph extends Component<MyProps, MyState> {
     }
 }
 
-const boundedDataArray = array => {
+const boundDataArray = array => {
     array.map(val => {
         if (val.temp > 50) {
             val.temp = 50;
@@ -75,11 +70,10 @@ const boundedDataArray = array => {
         if (val.temp < 0) {
             val.temp = 0;
         }
-        return val;
     });
 };
 
-// const boundedDataArray = array => {
+// const getBoundedDataArray = array => {
 //     return array.map(val => {
 //         if (val.temp > 50) {
 //             return 50;
@@ -98,7 +92,7 @@ const getFakeDataOne = () => {
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
             timestamp: time,
-            temp: Math.random() * 50
+            temp: Math.random() * 60 - 10
         });
     }
     for (let i = 33; i < 66; i += 1) {
@@ -114,7 +108,7 @@ const getFakeDataOne = () => {
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
             timestamp: time,
-            temp: Math.random() * 50
+            temp: Math.random() * 60 - 10
         });
     }
     dataArray.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
