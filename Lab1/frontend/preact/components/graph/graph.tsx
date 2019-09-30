@@ -8,6 +8,9 @@ interface MyState {
     dataCoverArray: TimestampArray;
 }
 
+const LOWER_BOUND = 10;
+const UPPER_BOUND = 50;
+
 export default class Graph extends Component<MyProps, MyState> {
     constructor() {
         super();
@@ -40,8 +43,8 @@ export default class Graph extends Component<MyProps, MyState> {
 
     render() {
         const { dataArray, dataCoverArray } = this.state;
-        dataArray[0].temp = 0;
-        dataArray[1].temp = 50;
+        dataArray[0].temp = LOWER_BOUND;
+        dataArray[1].temp = UPPER_BOUND;
 
         return (
             <TrendChart
@@ -51,7 +54,7 @@ export default class Graph extends Component<MyProps, MyState> {
                 x="timestamp"
                 y="temp"
                 data={getBoundedDataArray(dataArray)}
-                dataSetTwo={dataCoverArray}
+                dataSetTwo={getBoundedDataArray(dataCoverArray)}
                 margin={{ top: 60, right: 80, left: 80, bottom: 60 }}
                 axisControl={false}
                 tooltip={false}
@@ -62,15 +65,15 @@ export default class Graph extends Component<MyProps, MyState> {
 
 const getBoundedDataArray = array => {
     return array.map(val => {
-        if (val.temp > 50) {
+        if (val.temp > UPPER_BOUND) {
             return {
                 timestamp: new Date(val.timestamp),
-                temp: 50
+                temp: UPPER_BOUND
             };
-        } else if (val.temp < 0) {
+        } else if (val.temp < LOWER_BOUND) {
             return {
                 timestamp: new Date(val.timestamp),
-                temp: 0
+                temp: LOWER_BOUND
             };
         } else return val;
     });
@@ -78,7 +81,7 @@ const getBoundedDataArray = array => {
 
 const getFakeDataOne = () => {
     const dataArray = [];
-    for (let i = 0; i < 33; i += 1) {
+    for (let i = 0; i < 300; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
@@ -86,7 +89,7 @@ const getFakeDataOne = () => {
             temp: Math.random() * 60 - 10
         });
     }
-    for (let i = 33; i < 66; i += 1) {
+    for (let i = 300; i < 600; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
@@ -94,7 +97,7 @@ const getFakeDataOne = () => {
             temp: -100
         });
     }
-    for (let i = 66; i < 99; i += 1) {
+    for (let i = 600; i < 1000; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
