@@ -65,7 +65,19 @@ export default class Graph extends Component<MyProps, MyState> {
                     />
                 </div>
                 <div class={style.XAxisItems}>
-                    <div class={style.XAxisItem}>150</div>
+                    <div class={`${style.XAxisItem} ${style.ThreeHundred}`}>
+                        300
+                    </div>
+                    <div class={`${style.XAxisItem} ${style.TwoTwentyFive}`}>
+                        225
+                    </div>
+                    <div class={`${style.XAxisItem} ${style.OneFifty}`}>
+                        150
+                    </div>
+                    <div class={`${style.XAxisItem} ${style.SevenFive}`}>
+                        75
+                    </div>
+                    <div class={`${style.XAxisItem} ${style.Zero}`}>0</div>
                 </div>
                 <div class={style.XAxisLabels}>
                     <div class={style.XAxisLabel}>(Seconds Ago)</div>
@@ -93,7 +105,7 @@ const getBoundedDataArray = array => {
 
 const getFakeDataOne = () => {
     const dataArray = [];
-    for (let i = 0; i < 300; i += 1) {
+    for (let i = 0; i < 100; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
@@ -101,7 +113,7 @@ const getFakeDataOne = () => {
             temp: Math.random() * 60 - 10
         });
     }
-    for (let i = 300; i < 600; i += 1) {
+    for (let i = 100; i < 200; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
@@ -109,7 +121,7 @@ const getFakeDataOne = () => {
             temp: -100
         });
     }
-    for (let i = 600; i < 1000; i += 1) {
+    for (let i = 200; i < 300; i += 1) {
         const time = new Date();
         time.setSeconds(time.getSeconds() - i);
         dataArray.push({
@@ -123,7 +135,6 @@ const getFakeDataOne = () => {
 
 const getCoverArray = dataArray => {
     const dataCoverArray = [];
-    console.log('getCoverGot', dataArray);
 
     dataCoverArray.push({
         timestamp: dataArray[0].timestamp,

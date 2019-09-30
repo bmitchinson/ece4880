@@ -1,6 +1,7 @@
+@import '../../style/variables';
+
 .ContainGraph {
     width: 100%;
-    height: 100%;
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -8,29 +9,54 @@
 }
 
 .ContainChart {
-    //background-color: aquamarine;
-    width: 95%;
-    height: 80%;
+    margin-top: 1em;
+    width: 100%;
+    height: 15em;
 }
 
 .XAxisItems {
-    display: flex;
-    width: 95%;
-    height: 10%;
-    justify-content: space-around;
+    position: relative;
+    width: 100%;
+    height: 1em;
+    margin-bottom: 0.5em;
 }
 
 .XAxisItem {
-    font-size: 80%;
+    font-size: 1vw;
+    position: absolute;
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        font-size: 1.4vw;
+    }
+}
+
+.Zero {
+    left: 97.5%;
+}
+.SevenFive {
+    left: 74.3%;
+}
+.OneFifty {
+    left: 49.5%;
+}
+.TwoTwentyFive {
+    left: 25.7%;
+}
+.ThreeHundred {
+    left: 3%;
 }
 
 .XAxisLabels {
     display: flex;
-    width: 95%;
-    height: 10%;
+    width: 100%;
+    height: 2em;
     justify-content: space-evenly;
 }
 
 .XAxisLabel {
-    font-size: 80%;
+    font-size: 1vw;
+    padding-left: 1.4em;
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        font-size: 1.5vw;
+        padding-left: 1.1em;
+    }
 }
