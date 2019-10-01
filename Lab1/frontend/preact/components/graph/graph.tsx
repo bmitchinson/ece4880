@@ -118,6 +118,9 @@ export default class Graph extends Component<MyProps, MyState> {
 
         return !loading ? (
             <div class={style.ContainGraph}>
+                <div class={style.TopCRow}>
+                    <div class={`${style.XAxisItem} ${style.C}`}>°C</div>
+                </div>
                 <div class={style.ContainChart}>
                     <TrendChart
                         extent={fiveMinExtent}
