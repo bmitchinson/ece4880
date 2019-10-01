@@ -29,7 +29,7 @@ from PIL import ImageFont
 
 cred = credentials.Certificate("./lab1-firebase-admin-sdk-key.json")
 firebase_admin.initialize_app(cred)
-sleep_duration = 1
+SLEEP_DURATION = 1
 
 DC = 23
 RST = 24
@@ -63,8 +63,16 @@ def read_and_send_temp_process(state, individual_run=False):
     sensor = W1ThermSensor()
     while True:
         sleep(SLEEP_DURATION)
-        send_temps = switch_is_on() and state['a']
+        send_temps = switch_is_on() and not state['local_state']['toggles']['sensor']['isDisconnected']
         if send_temps:
+            try:
+                new_temp = Temperature(sensor.get_temperature())
+                write_temp_to_lcd(new_temp.temp)
+                print("Saved: {0}".format(str(new_temp)))
+            except Exception as e:
+                write_unpluged_to_lcd()
+                print('sensor unpluged')
+
             new_doc = temps.document()
             current_temp = senesor.get_temperature
             state["current_temp"] = current_temp
@@ -73,7 +81,21 @@ def read_and_send_temp_process(state, individual_run=False):
             print("Saved: {0}, to firestore".format(str(new_temp)))
 
 
-def update_state_process(state, individual_run=False):
+def update_firestore_state_process(state, individual_run=False):
+    db = firestore.client()
+    prefs = db.collection(u"preferences")
+    while True:
+        sleep(SLEEP_DURATION)
+        # read state from firestore
+
+
+def update_display_process(state, individual_run=False):
+    disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
+    font = ImageFont.load_default()
+    disp.begin(contrast=60)
+    disp.clear()
+    disp.display()
+
     def write_unpluged_to_lcd():
           image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
           draw = ImageDraw.Draw(image)
@@ -92,20 +114,7 @@ def update_state_process(state, individual_run=False):
           disp.image(image)
           disp.display()
 
-    db = firestore.client()
-    prefs = db.collection(u"preferences")
-    while True:
-        sleep(SLEEP_DURATION)
-        # read state from firestore
-        state["b"] = not state["b"]
 
-
-def update_display_process(state, individual_run=False):
-    disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
-    font = ImageFont.load_default()
-    disp.begin(contrast=60)
-    disp.clear()
-    disp.display()
 
     while True:
         sleep(SLEEP_DURATION)
@@ -134,7 +143,8 @@ def main():
         try:
             processes = [
                 Process(target=read_and_send_temp_process, args=(state_dict,)),
-                Process(target=update_state_process, args=(state_dict,)),
+                Process(target=update_firestore_state_process, args=(state_dict,)),
+                Process(target=copy_firestore_to_local_process, args=(state_dict,)),
                 Process(target=update_display_process, args=(state_dict,)),
                 Process(target=hardware_io_process, args=(state_dict,)),
             ]
