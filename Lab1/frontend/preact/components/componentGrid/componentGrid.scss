@@ -3,9 +3,9 @@
 .Grid {
     display: grid;
     gap: 30px;
-    grid-template-areas: 't g g g ' 'c c c c';
-    grid-template-rows: auto auto;
-    grid-template-columns: 25% 22% 22% 22%;
+    grid-template-areas: 'g g g g ' 't c c c';
+    grid-template-rows: 60% 40%;
+    grid-template-columns: 27% 19% 23% 23%;
 
     @media only screen and (max-width: $mobileLayoutCutoff) {
         grid-template-areas: 'g' 't' 'c';
