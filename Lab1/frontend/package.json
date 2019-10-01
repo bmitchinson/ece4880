@@ -6,7 +6,7 @@
         "build": "tsc && preact build --src preact --dest preact_build --template preact/index.html --no-prerender",
         "watch": "concurrently \"tsc --watch\" \"preact watch --src preact --template preact/index.html --port 1234\"",
         "lint": "eslint . --ext .ts --ext .tsx && stylelint preact/**/*.scss",
-        "terser": "terser preact_build/bundle.a9ef5.js -c -m -o preact_build/bundle.a9ef5.js",
+        "terser": "terser preact_build/bundle.ddd4d.js -c -m -o preact_build/bundle.ddd4d.js",
         "postinstall": "patch-package"
     },
     "repository": {
@@ -28,6 +28,7 @@
         "preact-fluid": "^0.9.1",
         "preact-render-to-string": "^4.1.0",
         "preact-router": "^2.6.1",
+        "styled-loaders": "^0.3.0",
         "terser": "^4.3.4"
     },
     "devDependencies": {

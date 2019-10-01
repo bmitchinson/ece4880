@@ -1,11 +1,13 @@
 import { h, Component } from 'preact';
 import { database } from '../firebase/firebase';
 import { TrendChart, TimestampArray } from 'preact-charts';
+import { CubeGrid } from 'styled-loaders';
 
 import style from './graph.scss';
 
 interface MyProps {}
 interface MyState {
+    loading: boolean;
     dataArray: TimestampArray;
     dataCoverArray: TimestampArray;
 }
@@ -18,11 +20,23 @@ export default class Graph extends Component<MyProps, MyState> {
         super();
         const dataArray = getFakeDataOne();
         const dataCoverArray = getCoverArray(dataArray);
+        // Set loading state
 
-        this.state = { dataArray, dataCoverArray };
+        this.state = { dataArray, dataCoverArray, loading: true };
     }
 
     componentDidMount() {
+        // Fetch last 300 from firebase
+        // Iterate through all 300, assigning to 300 solts, determined by 300
+        //   slots from current time
+        // After set a function that every second:
+        //   queries for the most recent one:
+        //   if it's within a second of current time:
+        //      push it to existing 300 slots
+        //   Otherwise:
+        //      add a -100 at the current time
+        //   remove end.
+        //
         //setInterval(this.addNewPoint, 1000);
     }
 
@@ -44,11 +58,11 @@ export default class Graph extends Component<MyProps, MyState> {
     };
 
     render() {
-        const { dataArray, dataCoverArray } = this.state;
+        const { dataArray, dataCoverArray, loading } = this.state;
         dataArray[0].temp = LOWER_BOUND;
         dataArray[1].temp = UPPER_BOUND;
 
-        return (
+        return !loading ? (
             <div class={style.ContainGraph}>
                 <div class={style.ContainChart}>
                     <TrendChart
@@ -83,6 +97,8 @@ export default class Graph extends Component<MyProps, MyState> {
                     <div class={style.XAxisLabel}>(Seconds Ago)</div>
                 </div>
             </div>
+        ) : (
+            <CubeGrid color="#90d7c2" size="60px" />
         );
     }
 }
