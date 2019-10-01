@@ -13,13 +13,10 @@ interface MyProps {}
 interface MyState {
     loading: boolean;
     dataArray: TimestampArray;
-    dataCoverArray: TimestampArray;
 }
 
 const LOWER_BOUND = 10;
 const UPPER_BOUND = 50;
-
-const tempQueue = [];
 
 export default class Graph extends Component<MyProps, MyState> {
     constructor() {
@@ -33,28 +30,23 @@ export default class Graph extends Component<MyProps, MyState> {
                 temp: -100
             });
         }
-        const dataCoverArray = getCoverArray(dataArray);
-        // Set loading state
 
-        this.state = { dataArray, dataCoverArray, loading: true };
+        this.state = { dataArray, loading: true };
     }
 
     componentDidMount() {
-        // Create 300 slots
-        // [0] oldest
         const dataArray = this.state.dataArray;
 
         const zeroMinAgo = Math.floor(
             dataArray[299].timestamp.getTime() / 1000
         );
-        const fiveMinAgo = Math.floor(dataArray[0].timestamp.getTime() / 1000);
+        const fiveMinAgo = Math.floor(dataArray[0].timestamp.getTime() / 1200);
 
-        // Fetch last 300 from firebase
         tempObj
             .get()
             .then(snap => {
+                // Backfill the last 300 temps
                 snap.forEach(doc => {
-                    // Newest in [0]
                     const seconds = doc.data().time.seconds;
                     const temp = doc.data().temp;
                     if (seconds >= fiveMinAgo && seconds <= zeroMinAgo) {
@@ -65,77 +57,69 @@ export default class Graph extends Component<MyProps, MyState> {
                         };
                     }
                 });
-                // Set an onChange that then populates a queue of incoming temps
-                // Every second, pull from that queue or create a dud if queue's empty
+                // Listen for new temps
                 newTempObj.onSnapshot(snapShot => {
                     snapShot.forEach(doc => {
-                        tempQueue.push({
-                            temp: doc.data().temp,
-                            timestamp: new Date(doc.data().time.seconds * 1000)
-                        });
+                        const dataArrayEdit = this.state.dataArray;
+
+                        const fiveMinAgo = Math.floor(
+                            dataArrayEdit[0].timestamp.getTime() / 1000
+                        );
+
+                        if (doc.data().time) {
+                            const newItemSec = doc.data().time.seconds;
+                            if (newItemSec >= fiveMinAgo) {
+                                dataArrayEdit.splice(0, 1);
+                                dataArrayEdit.push({
+                                    temp: doc.data().temp,
+                                    timestamp: new Date(newItemSec * 1000)
+                                });
+                                this.setState({
+                                    dataArray: dataArrayEdit
+                                });
+                            }
+                        }
                     });
                 });
-                setInterval(this.addPointFromQueue, 1000);
+                setInterval(this.addPointIfOld, 200);
                 this.setState({ loading: false });
             })
             .catch(e => console.log('Error getting documents:', e));
     }
 
-    addPointFromQueue = () => {
-        const dataArrayEdit = this.state.dataArray;
-
-        const zeroMinAgo = Math.floor(
-            new Date().getTime() / 1000
-            //dataArrayEdit[299].timestamp.getTime() / 1000
-        );
-        const fiveMinAgo = Math.floor(
-            dataArrayEdit[0].timestamp.getTime() / 1000
-        );
-
-        const popSeconds =
-            tempQueue.length !== 0
-                ? tempQueue[0].timestamp.getTime() / 1000
-                : 0;
-
-        if (popSeconds <= zeroMinAgo && popSeconds >= fiveMinAgo) {
-            const pos = 299 - (zeroMinAgo - popSeconds);
-            dataArrayEdit[pos] = {
-                timestamp: new Date(popSeconds * 1000),
-                temp: tempQueue[0].temp.toFixed(1)
-            };
-            tempQueue.splice(0, 1);
-        } else {
-            if (tempQueue.length) {
-                tempQueue.splice(0, 1);
-            }
+    addPointIfOld = () => {
+        if (
+            new Date().getTime() -
+                this.state.dataArray[299].timestamp.getTime() >
+            1000
+        ) {
+            const dataArrayEdit = this.state.dataArray;
             dataArrayEdit.splice(0, 1);
             dataArrayEdit.push({
                 timestamp: new Date(),
                 temp: -100
             });
+            this.setState({
+                dataArray: dataArrayEdit
+            });
         }
-        //const dataCoverArrayEdit = getCoverArray(dataArrayEdit);
-
-        this.setState({
-            dataArray: dataArrayEdit
-            // dataCoverArray: dataCoverArrayEdit
-        });
     };
 
     render() {
-        const { dataArray, dataCoverArray, loading } = this.state;
+        const { dataArray, loading } = this.state;
+        const dataCoverArray = getCoverArray(dataArray);
 
         return !loading ? (
             <div class={style.ContainGraph}>
                 <div class={style.ContainChart}>
                     <TrendChart
                         lineColour="#90d7c2"
-                        //lineColourTwo="#ffffff"
+                        lineColourTwo="#ffffff"
                         name="Temps"
                         x="timestamp"
                         y="temp"
                         data={getBoundedDataArray(dataArray)}
-                        //dataSetTwo={getBoundedDataArray(dataCoverArray)}
+                        dataSetTwo={getBoundedDataArray(dataCoverArray)}
                         margin={{ top: 20, right: 20, left: 40, bottom: 10 }}
                         axisControl={false}
                         tooltip={false}
@@ -183,36 +167,6 @@ const getBoundedDataArray = array => {
         })
         .sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
 };
-
-// const getFakeDataOne = () => {
-//     const dataArray = [];
-//     for (let i = 0; i < 100; i += 1) {
-//         const time = new Date();
-//         time.setSeconds(time.getSeconds() - i);
-//         dataArray.push({
-//             timestamp: time,
-//             temp: Math.random() * 60 - 10
-//         });
-//     }
-//     for (let i = 100; i < 200; i += 1) {
-//         const time = new Date();
-//         time.setSeconds(time.getSeconds() - i);
-//         dataArray.push({
-//             timestamp: time,
-//             temp: -100
-//         });
-//     }
-//     for (let i = 200; i < 300; i += 1) {
-//         const time = new Date();
-//         time.setSeconds(time.getSeconds() - i);
-//         dataArray.push({
-//             timestamp: time,
-//             temp: Math.random() * 60 - 10
-//         });
-//     }
-//     dataArray.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
-//     return dataArray;
-// };
 
 const getCoverArray = dataArray => {
     const dataCoverArray = [];
@@ -272,6 +226,5 @@ const getCoverArray = dataArray => {
             });
         }
     });
-    // dataCoverArray.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
     return dataCoverArray;
 };
