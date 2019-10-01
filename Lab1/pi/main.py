@@ -27,6 +27,10 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+import schedule
+import threading
+
+
 cred = credentials.Certificate("./lab1-firebase-admin-sdk-key.json")
 firebase_admin.initialize_app(cred)
 SLEEP_DURATION = 1
@@ -57,28 +61,17 @@ def switch_is_on():
     return True
 
 
-def read_and_send_temp_process(state, individual_run=False):
-    db = firestore.client()
-    temps = db.collection(u"temps")
-    sensor = W1ThermSensor()
-    while True:
-        sleep(SLEEP_DURATION)
-        send_temps = switch_is_on() and not state['local_state']['toggles']['sensor']['isDisconnected']
-        if send_temps:
-            try:
-                new_temp = Temperature(sensor.get_temperature())
-                write_temp_to_lcd(new_temp.temp)
-                print("Saved: {0}".format(str(new_temp)))
-            except Exception as e:
-                write_unpluged_to_lcd()
-                print('sensor unpluged')
-
-            new_doc = temps.document()
-            current_temp = senesor.get_temperature
-            state["current_temp"] = current_temp
-            new_temp = Temperature(current_temp)
-            new_doc.set(new_temp.to_dict(firestore_timestamp=True))
-            print("Saved: {0}, to firestore".format(str(new_temp)))
+def read_temp_process(state):
+    state['update_display'] = True
+    sensor = state['sensor']
+    try:
+        new_temp = Temperature(sensor.get_temperature())
+        state["current_temp"] = new_temp
+        print("Saved: {0}".format(str(new_temp)))
+        state['isDisconnected'] = False
+    except Exception as e:
+        state['isDisconnected'] = True
+        print('sensor unpluged')
 
 
 def update_firestore_state_process(state, individual_run=False):
@@ -89,40 +82,38 @@ def update_firestore_state_process(state, individual_run=False):
         # read state from firestore
 
 
-def update_display_process(state, individual_run=False):
-    disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
-    font = ImageFont.load_default()
-    disp.begin(contrast=60)
-    disp.clear()
-    disp.display()
+def update_display_process(state):
+    if state['update_display'] and state['isPressed']:
+        state['update_display'] = False
+        disp = state['disp']
+        font = state['font']
+        disp.clear()
+        disp.display()
 
-    def write_unpluged_to_lcd():
-          image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-          draw = ImageDraw.Draw(image)
-          draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-          formatted_str = "! DISCONNECTED !"
-          draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
-          disp.image(image)
-          disp.display()
+        def write_unpluged_to_lcd():
+              image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+              draw = ImageDraw.Draw(image)
+              draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+              formatted_str = "! DISCONNECTED !"
+              draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
+              disp.image(image)
+              disp.display()
 
-    def write_temp_to_lcd(temperature : int):
-          image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-          draw = ImageDraw.Draw(image)
-          draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-          formatted_str = "Temp: %.2f." % temperature
-          draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
-          disp.image(image)
-          disp.display()
+        def write_temp_to_lcd(temperature : float):
+              image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+              draw = ImageDraw.Draw(image)
+              draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+              formatted_str = "Temp: %.2f." % temperature
+              draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
+              disp.image(image)
+              disp.display()
 
-
-
-    while True:
-        sleep(SLEEP_DURATION)
-        # check some condition
-
-        print("idk what to do here yet")
-        current_temp = state["current_temp"]
-        # display the current temperature
+        current_temp = state["current_temp"].temp
+        print('curr temp in display %d' % current_temp)
+        if state['isDisconnected']:
+            write_unpluged_to_lcd()
+        else:
+            write_temp_to_lcd(current_temp)
 
 def hardware_io_process(state, individual_run=False):
     # lol we should figure this out....
@@ -130,29 +121,66 @@ def hardware_io_process(state, individual_run=False):
         print('hardware sucks')
         sleep(SLEEP_DURATION)
 
+def togg_togg(state):
+    state['isDisconnected'] = not state['isDisconnected']
+    state['update_display'] = True
 
 def main():
-    with Manager() as manager:
-        state_dict = manager.dict()
-        # Read initial state from firestore
-        db = firestore.client()
-        prefs = db.collection(u"preferences")
-        state_dict["firestore_state"] = {}  # put state here
-        state_dict["local_state"] = {}
-        state_dict["current_temp"] = 0.0;
-        try:
-            processes = [
-                Process(target=read_and_send_temp_process, args=(state_dict,)),
-                Process(target=update_firestore_state_process, args=(state_dict,)),
-                Process(target=copy_firestore_to_local_process, args=(state_dict,)),
-                Process(target=update_display_process, args=(state_dict,)),
-                Process(target=hardware_io_process, args=(state_dict,)),
-            ]
-            [p.start() for p in processes]
-            [p.join() for p in processes]
-        finally:
-            print("BYE BYE")
-            [p.join() for p in processes]
+    disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
+    font = ImageFont.load_default()
+    disp.begin(contrast=60)
+    disp.clear()
+    disp.display()
+    sensor = W1ThermSensor()
+    db = firestore.client()
+    temps = db.collection(u"temps")
+
+    state = {}
+    state['isDisconnected']=False
+    state['disp'] = disp
+    state['font'] = font
+    state['current_temp'] = Temperature(0.0)
+    state['update_display'] = False
+    state['isPressed'] = True
+    state['sensor'] = sensor
+    state['temps'] = temps
+
+
+
+    def run_threaded(job_function, state):
+        job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
+        job_thread.start()
+
+    schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
+    schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
+
+    while True:
+        schedule.run_pending()
+        sleep(0.01)
+
+
+
+#    with Manager() as manager:
+#        state_dict = manager.dict()
+#        # Read initial state from firestore
+#        db = firestore.client()
+#        prefs = db.collection(u"preferences")
+#        state_dict["firestore_state"] = {}  # put state here
+#        state_dict["local_state"] = {}
+#        state_dict["current_temp"] = 0.0;
+#        try:
+#            processes = [
+#                Process(target=read_and_send_temp_process, args=(state_dict,)),
+#                Process(target=update_firestore_state_process, args=(state_dict,)),
+#                Process(target=copy_firestore_to_local_process, args=(state_dict,)),
+#                Process(target=update_display_process, args=(state_dict,)),
+#                Process(target=hardware_io_process, args=(state_dict,)),
+#            ]
+#            [p.start() for p in processes]
+#            [p.join() for p in processes]
+#        finally:
+#            print("BYE BYE")
+#            [p.join() for p in processes]
 
 
 if __name__ == "__main__":
