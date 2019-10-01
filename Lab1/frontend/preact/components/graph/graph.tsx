@@ -5,14 +5,17 @@ import { CubeGrid } from 'styled-loaders';
 
 import style from './graph.scss';
 
+const openingFiveMinAgo = new Date(Date.now() - 300000);
+
 const tempRef = database.collection('temps');
-const tempObj = tempRef.orderBy('time', 'desc').limit(300);
+const tempObj = tempRef.where('time', '>=', openingFiveMinAgo).limit(300);
 const newTempObj = tempRef.orderBy('time', 'desc').limit(1);
 
 interface MyProps {}
 interface MyState {
     loading: boolean;
     dataArray: TimestampArray;
+    fiveMinExtent: Date[];
 }
 
 const LOWER_BOUND = 10;
@@ -21,26 +24,22 @@ const UPPER_BOUND = 50;
 export default class Graph extends Component<MyProps, MyState> {
     constructor() {
         super();
+        const extent = this.refreshExtent();
         const dataArray = [];
-        for (let i = 300; i > 0; i -= 1) {
-            const time = new Date();
-            time.setSeconds(time.getSeconds() - i);
-            dataArray.push({
-                timestamp: time,
-                temp: -100
-            });
-        }
+        const time = new Date();
+        dataArray.push({
+            timestamp: time,
+            temp: -100
+        });
 
-        this.state = { dataArray, loading: true };
+        this.state = { dataArray, loading: true, fiveMinExtent: extent };
     }
 
     componentDidMount() {
         const dataArray = this.state.dataArray;
 
-        const zeroMinAgo = Math.floor(
-            dataArray[299].timestamp.getTime() / 1000
-        );
-        const fiveMinAgo = Math.floor(dataArray[0].timestamp.getTime() / 1200);
+        const fiveMinAgoSeconds = this.state.fiveMinExtent[0].getTime() / 1000;
+        const zeroMinAgoSeconds = this.state.fiveMinExtent[1].getTime() / 1000;
 
         tempObj
             .get()
@@ -49,74 +48,109 @@ export default class Graph extends Component<MyProps, MyState> {
                 snap.forEach(doc => {
                     const seconds = doc.data().time.seconds;
                     const temp = doc.data().temp;
-                    if (seconds >= fiveMinAgo && seconds <= zeroMinAgo) {
-                        const pos = 299 - (zeroMinAgo - seconds);
-                        dataArray[pos] = {
+                    if (
+                        seconds >= fiveMinAgoSeconds &&
+                        seconds <= zeroMinAgoSeconds
+                    ) {
+                        dataArray.push({
                             timestamp: new Date(seconds * 1000),
-                            temp: temp.toFixed(1)
-                        };
+                            temp: temp
+                        });
                     }
                 });
                 // Listen for new temps
                 newTempObj.onSnapshot(snapShot => {
                     snapShot.forEach(doc => {
                         const dataArrayEdit = this.state.dataArray;
-
-                        const fiveMinAgo = Math.floor(
-                            dataArrayEdit[0].timestamp.getTime() / 1000
-                        );
-
-                        if (doc.data().time) {
-                            const newItemSec = doc.data().time.seconds;
-                            if (newItemSec >= fiveMinAgo) {
-                                dataArrayEdit.splice(0, 1);
-                                dataArrayEdit.push({
-                                    temp: doc.data().temp,
-                                    timestamp: new Date(newItemSec * 1000)
-                                });
-                                this.setState({
-                                    dataArray: dataArrayEdit
-                                });
-                            }
+                        const newItemSec =
+                            doc.data().time && doc.data().time.seconds;
+                        if (newItemSec >= fiveMinAgoSeconds) {
+                            dataArrayEdit.push({
+                                temp: doc.data().temp,
+                                timestamp: new Date(newItemSec * 1000)
+                            });
+                            this.setState({
+                                dataArray: dataArrayEdit
+                            });
                         }
                     });
                 });
-                setInterval(this.addPointIfOld, 200);
+                setInterval(this.refreshExtent, 500);
+                setInterval(this.addPointIfOld, 3000);
+                // setInterval(this.printDataArray, 3000);
                 this.setState({ loading: false });
             })
             .catch(e => console.log('Error getting documents:', e));
     }
 
+    refreshExtent = () => {
+        const now = new Date();
+        const fiveAgo = new Date();
+        fiveAgo.setSeconds(fiveAgo.getSeconds() - 300);
+
+        this.setState({ fiveMinExtent: [fiveAgo, now] });
+
+        return [fiveAgo, now];
+    };
+
     addPointIfOld = () => {
-        if (
-            new Date().getTime() -
-                this.state.dataArray[299].timestamp.getTime() >
-            1000
-        ) {
-            const dataArrayEdit = this.state.dataArray;
-            dataArrayEdit.splice(0, 1);
+        const dataArrayEdit = this.state.dataArray;
+        const fiveMinExtent = this.state.fiveMinExtent;
+        const mostRecentPointUnixSeconds =
+            dataArrayEdit[dataArrayEdit.length - 1].timestamp.getTime() / 1000;
+        const currentTimeUnixSeconds = fiveMinExtent[1].getTime() / 1000;
+
+        if (mostRecentPointUnixSeconds + 1 < currentTimeUnixSeconds) {
             dataArrayEdit.push({
-                timestamp: new Date(),
+                timestamp: new Date((mostRecentPointUnixSeconds + 1) * 1000),
                 temp: -100
             });
-            this.setState({
-                dataArray: dataArrayEdit
-            });
+            this.setState({ dataArray: dataArrayEdit });
         }
+
+        // if (
+        //     new Date().getTime() -
+        //         this.state.dataArray[299].timestamp.getTime() >
+        //     1000
+        // ) {
+        //     const dataArrayEdit = this.state.dataArray;
+        //     dataArrayEdit.splice(0, 1);
+        //     if (f > 1) {
+        //
+        //         this.setState({
+        //             dataArray: dataArrayEdit
+        //         });
+        //         f = 0;
+        //     } else {
+        //         dataArrayEdit.push(dataArrayEdit[dataArrayEdit.length - 1]);
+        //         f++;
+        //         this.setState({
+        //             dataArray: dataArrayEdit
+        //         });
+        //     }
+        // }
+    };
+
+    printDataArray = () => {
+        console.log(this.state.dataArray);
     };
 
     render() {
-        const { dataArray, loading } = this.state;
+        const { dataArray, loading, fiveMinExtent } = this.state;
+        const dataCoverArray = getCoverArray(dataArray);
 
         return !loading ? (
             <div class={style.ContainGraph}>
                 <div class={style.ContainChart}>
                     <TrendChart
+                        extent={fiveMinExtent}
                         lineColour="#90d7c2"
+                        lineColourTwo="#f7f7f7"
                         name="Temps"
                         x="timestamp"
                         y="temp"
                         data={getBoundedDataArray(dataArray)}
+                        dataSetTwo={getBoundedDataArray(dataCoverArray)}
                         margin={{ top: 20, right: 20, left: 40, bottom: 10 }}
                         axisControl={false}
                         tooltip={false}
@@ -163,4 +197,65 @@ const getBoundedDataArray = array => {
             } else return val;
         })
         .sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
+};
+
+const getCoverArray = dataArray => {
+    const dataCoverArray = [];
+
+    dataCoverArray.push({
+        timestamp: dataArray[0].timestamp,
+        temp: 0
+    });
+    dataCoverArray.push({
+        timestamp: dataArray[dataArray.length - 1].timestamp,
+        temp: 0
+    });
+
+    dataArray.forEach((ele, index, dataArray) => {
+        const canLookBehind: boolean = index !== 0;
+        const canLookAhead: boolean = index !== dataArray.length - 1;
+        const isNeg100: boolean = ele.temp === -100;
+
+        if (isNeg100 && canLookBehind && dataArray[index - 1].temp !== -100) {
+            const pastTemp = dataArray[index - 1].temp;
+            const pastTimestamp = dataArray[index - 1].timestamp;
+            const shiftTimestamp = new Date(pastTimestamp);
+            shiftTimestamp.setMilliseconds(pastTimestamp.getMilliseconds() - 2);
+
+            dataCoverArray.push({
+                timestamp: shiftTimestamp,
+                temp: 0
+            });
+            dataCoverArray.push({
+                timestamp: pastTimestamp,
+                temp: pastTemp
+            });
+            dataCoverArray.push({
+                timestamp: ele.timestamp,
+                temp: 0
+            });
+        } else if (
+            isNeg100 &&
+            canLookAhead &&
+            dataArray[index + 1].temp !== -100
+        ) {
+            const nextTemp = dataArray[index + 1].temp;
+            const nextTimestamp = dataArray[index + 1].timestamp;
+            const shiftTimestamp = new Date(nextTimestamp);
+            shiftTimestamp.setMilliseconds(nextTimestamp.getMilliseconds() + 2);
+            dataCoverArray.push({
+                timestamp: ele.timestamp,
+                temp: 0
+            });
+            dataCoverArray.push({
+                timestamp: nextTimestamp,
+                temp: nextTemp
+            });
+            dataCoverArray.push({
+                timestamp: shiftTimestamp,
+                temp: 0
+            });
+        }
+    });
+    return dataCoverArray;
 };
