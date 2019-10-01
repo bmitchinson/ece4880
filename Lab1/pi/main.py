@@ -27,9 +27,12 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
+# Pins
+import RPi.GPIO as GPIO
+
+# Process stuff
 import schedule
 import threading
-
 
 cred = credentials.Certificate("./lab1-firebase-admin-sdk-key.json")
 firebase_admin.initialize_app(cred)
@@ -50,17 +53,6 @@ disp.begin(contrast=60)
 disp.clear()
 disp.display()
 
-
-def button_is_pressed():
-    # replace this with some logic that determines if the button is pressed
-    return True
-
-
-def switch_is_on():
-    # replace this with some logic that determines if the switch is on
-    return True
-
-
 def read_temp_process(state):
     state['update_display'] = True
     sensor = state['sensor']
@@ -80,7 +72,6 @@ def update_firestore_state_process(state, individual_run=False):
     while True:
         sleep(SLEEP_DURATION)
         # read state from firestore
-
 
 def update_display_process(state):
     if state['update_display'] and state['isPressed']:
@@ -109,7 +100,7 @@ def update_display_process(state):
               disp.display()
 
         current_temp = state["current_temp"].temp
-        print('curr temp in display %d' % current_temp)
+        # print('curr temp in display %d' % current_temp)
         if state['isDisconnected']:
             write_unpluged_to_lcd()
         else:
@@ -126,6 +117,18 @@ def togg_togg(state):
     state['update_display'] = True
 
 def main():
+
+    # Pins
+    GPIO.setmode(GPIO.BCM)
+    BACKLIGHT_PIN = 26
+    PUSH_BUTTON_PIN = 17
+    SWITCH_PIN = 27
+
+    GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
+    GPIO.setup(PUSH_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    
+    GPIO.output(BACKLIGHT_PIN, 1)
+
     disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
     font = ImageFont.load_default()
     disp.begin(contrast=60)
@@ -134,18 +137,31 @@ def main():
     sensor = W1ThermSensor()
     db = firestore.client()
     temps = db.collection(u"temps")
+    
+    GPIO.output(BACKLIGHT_PIN, 0)
 
     state = {}
-    state['isDisconnected']=False
-    state['disp'] = disp
+    state['isDisconnected'] = False
     state['font'] = font
+    state['disp'] = disp
     state['current_temp'] = Temperature(0.0)
     state['update_display'] = False
-    state['isPressed'] = True
+    state['isPressed'] = False
     state['sensor'] = sensor
     state['temps'] = temps
 
+    def update_is_pressed(pin):
+        if GPIO.input(PUSH_BUTTON_PIN):
+            state['isPressed'] = True
+            GPIO.output(BACKLIGHT_PIN, 1)
+        else:
+            state['isPressed'] = False
+            disp.clear()
+            disp.display()
+            GPIO.output(BACKLIGHT_PIN, 0)
 
+    # Interrupts:
+    GPIO.add_event_detect(PUSH_BUTTON_PIN, edge=GPIO.BOTH, callback=update_is_pressed, bouncetime=50)
 
     def run_threaded(job_function, state):
         job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
@@ -158,31 +174,5 @@ def main():
         schedule.run_pending()
         sleep(0.01)
 
-
-
-#    with Manager() as manager:
-#        state_dict = manager.dict()
-#        # Read initial state from firestore
-#        db = firestore.client()
-#        prefs = db.collection(u"preferences")
-#        state_dict["firestore_state"] = {}  # put state here
-#        state_dict["local_state"] = {}
-#        state_dict["current_temp"] = 0.0;
-#        try:
-#            processes = [
-#                Process(target=read_and_send_temp_process, args=(state_dict,)),
-#                Process(target=update_firestore_state_process, args=(state_dict,)),
-#                Process(target=copy_firestore_to_local_process, args=(state_dict,)),
-#                Process(target=update_display_process, args=(state_dict,)),
-#                Process(target=hardware_io_process, args=(state_dict,)),
-#            ]
-#            [p.start() for p in processes]
-#            [p.join() for p in processes]
-#        finally:
-#            print("BYE BYE")
-#            [p.join() for p in processes]
-
-
 if __name__ == "__main__":
     main()
-
