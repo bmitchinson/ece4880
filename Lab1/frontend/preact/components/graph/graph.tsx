@@ -75,9 +75,8 @@ export default class Graph extends Component<MyProps, MyState> {
                         }
                     });
                 });
-                setInterval(this.refreshExtent, 500);
-                setInterval(this.addPointIfOld, 3000);
-                // setInterval(this.printDataArray, 3000);
+                setInterval(this.refreshExtent, 100);
+                setInterval(this.addPointIfOld, 100);
                 this.setState({ loading: false });
             })
             .catch(e => console.log('Error getting documents:', e));
@@ -107,28 +106,6 @@ export default class Graph extends Component<MyProps, MyState> {
             });
             this.setState({ dataArray: dataArrayEdit });
         }
-
-        // if (
-        //     new Date().getTime() -
-        //         this.state.dataArray[299].timestamp.getTime() >
-        //     1000
-        // ) {
-        //     const dataArrayEdit = this.state.dataArray;
-        //     dataArrayEdit.splice(0, 1);
-        //     if (f > 1) {
-        //
-        //         this.setState({
-        //             dataArray: dataArrayEdit
-        //         });
-        //         f = 0;
-        //     } else {
-        //         dataArrayEdit.push(dataArrayEdit[dataArrayEdit.length - 1]);
-        //         f++;
-        //         this.setState({
-        //             dataArray: dataArrayEdit
-        //         });
-        //     }
-        // }
     };
 
     printDataArray = () => {
@@ -145,7 +122,7 @@ export default class Graph extends Component<MyProps, MyState> {
                     <TrendChart
                         extent={fiveMinExtent}
                         lineColour="#90d7c2"
-                        lineColourTwo="#f7f7f7"
+                        lineColourTwo="#ffffff"
                         name="Temps"
                         x="timestamp"
                         y="temp"
