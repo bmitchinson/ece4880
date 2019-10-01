@@ -15,7 +15,7 @@ db = firestore.client()
 temps = db.collection(u"temps")
 
 offset = 15
-temp_range = 30
+temp_range = 5
 
 print("connection test... this may take a moment")
 count = 0

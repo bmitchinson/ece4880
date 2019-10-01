@@ -7,6 +7,7 @@ import style from './graph.scss';
 
 const tempRef = database.collection('temps');
 const tempObj = tempRef.orderBy('time', 'desc').limit(300);
+const newTempObj = tempRef.orderBy('time', 'desc').limit(1);
 
 interface MyProps {}
 interface MyState {
@@ -49,12 +50,10 @@ export default class Graph extends Component<MyProps, MyState> {
         const fiveMinAgo = Math.floor(dataArray[0].timestamp.getTime() / 1000);
 
         // Fetch last 300 from firebase
-        let howmany = 0;
         tempObj
             .get()
             .then(snap => {
                 snap.forEach(doc => {
-                    howmany += 1;
                     // Newest in [0]
                     const seconds = doc.data().time.seconds;
                     const temp = doc.data().temp;
@@ -64,65 +63,64 @@ export default class Graph extends Component<MyProps, MyState> {
                             timestamp: new Date(seconds * 1000),
                             temp: temp.toFixed(1)
                         };
-                    } else {
-                        console.log('data not in range:', doc.data());
                     }
                 });
-                console.log('how many', howmany);
                 // Set an onChange that then populates a queue of incoming temps
                 // Every second, pull from that queue or create a dud if queue's empty
+                newTempObj.onSnapshot(snapShot => {
+                    snapShot.forEach(doc => {
+                        tempQueue.push({
+                            temp: doc.data().temp,
+                            timestamp: new Date(doc.data().time.seconds * 1000)
+                        });
+                    });
+                });
                 setInterval(this.addPointFromQueue, 1000);
                 this.setState({ loading: false });
             })
             .catch(e => console.log('Error getting documents:', e));
-
-        // After set a function that every second:
-        //   queries for the most recent one:
-        //   if it's within a second of current time:
-        //      push it to existing 300 slots
-        //   Otherwise:
-        //      add a -100 at the current time
-        //   remove end.
-        //
     }
 
     addPointFromQueue = () => {
         const dataArrayEdit = this.state.dataArray;
-        dataArrayEdit.splice(0, 1);
 
-        if (tempQueue.length) {
+        const zeroMinAgo = Math.floor(
+            new Date().getTime() / 1000
+            //dataArrayEdit[299].timestamp.getTime() / 1000
+        );
+        const fiveMinAgo = Math.floor(
+            dataArrayEdit[0].timestamp.getTime() / 1000
+        );
+
+        const popSeconds =
+            tempQueue.length !== 0
+                ? tempQueue[0].timestamp.getTime() / 1000
+                : 0;
+
+        if (popSeconds <= zeroMinAgo && popSeconds >= fiveMinAgo) {
+            const pos = 299 - (zeroMinAgo - popSeconds);
+            dataArrayEdit[pos] = {
+                timestamp: new Date(popSeconds * 1000),
+                temp: tempQueue[0].temp.toFixed(1)
+            };
+            tempQueue.splice(0, 1);
         } else {
+            if (tempQueue.length) {
+                tempQueue.splice(0, 1);
+            }
+            dataArrayEdit.splice(0, 1);
             dataArrayEdit.push({
                 timestamp: new Date(),
                 temp: -100
             });
         }
-        const dataCoverArrayEdit = getCoverArray(dataArrayEdit);
+        //const dataCoverArrayEdit = getCoverArray(dataArrayEdit);
 
         this.setState({
-            dataArray: dataArrayEdit,
-            dataCoverArray: dataCoverArrayEdit
+            dataArray: dataArrayEdit
+            // dataCoverArray: dataCoverArrayEdit
         });
     };
-
-    addPointToQueue = () => {};
-
-    // addNewPointToDataArray = () => {
-    //     const dataArrayEdit = this.state.dataArray;
-    //     const time = new Date();
-    //     dataArrayEdit.push({
-    //         timestamp: time,
-    //         temp: Math.random() * 60 - 10
-    //     });
-    //     dataArrayEdit.sort((a, b) => (a.timestamp < b.timestamp ? -1 : 1));
-    //     dataArrayEdit.splice(0, 1);
-    //     const dataCoverArrayEdit = getCoverArray(dataArrayEdit);
-
-    //     this.setState({
-    //         dataArray: dataArrayEdit,
-    //         dataCoverArray: dataCoverArrayEdit
-    //     });
-    // };
 
     render() {
         const { dataArray, dataCoverArray, loading } = this.state;

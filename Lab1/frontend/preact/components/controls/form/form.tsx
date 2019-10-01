@@ -55,10 +55,10 @@ export default class Form extends Component<MyProps, MyState> {
     }
 
     componentDidMount() {
-        buttonRef.onSnapshot(doc => {
-            const buttonIsPressed = doc.data().buttonIsPressed;
-            this.setState(prev => ({ ...prev, buttonIsPressed }));
-        });
+        // buttonRef.onSnapshot(doc => {
+        //     const buttonIsPressed = doc.data().buttonIsPressed;
+        //     this.setState(prev => ({ ...prev, buttonIsPressed }));
+        // });
         buttonRef.onSnapshot(doc => {
             const buttonIsPressed = doc.data().isPressed;
             this.setState({ buttonIsPressed });
