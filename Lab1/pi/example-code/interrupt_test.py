@@ -4,14 +4,15 @@ import time
 
 GPIO.setmode(GPIO.BCM)
 
-PUSH_BUTTON = 17
+SWITCH_PIN = 27
 
-GPIO.setup(PUSH_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-def push_button_change(pin):
+def handle_change(pin):
   print("Rising Edge ", pin )
 
-GPIO.add_event_detect(PUSH_BUTTON, GPIO.BOTH, callback=push_button_change)
+GPIO.add_event_detect(SWITCH_PIN, GPIO.BOTH, callback=handle_change)
 
 while(True):
+  print(GPIO.input(SWITCH_PIN))
   time.sleep(1)

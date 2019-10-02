@@ -3,7 +3,6 @@
 
 # for delaying each individual process ( so they take turns better )
 from time import sleep
-import datetime
 
 # thermometer library
 from w1thermsensor import W1ThermSensor
@@ -71,7 +70,8 @@ def read_temp_process(state):
         print('sensor unpluged')
     if not state['isDisconnected']:
         try:
-            send_temp_to_firebase(state)
+            # send_temp_to_firebase(state)
+            print('(firebase pushing commented out)')
         except Exception as e:
             print('problem pushing to firebase:')
             print(e)
@@ -81,58 +81,44 @@ def read_temp_process(state):
         print('problem pushing isDisconnected')
         print(e)
 
-    # try:
-    #     send_text_if_required(state)
-    # except Exception as e:
-    #     print('problem sending text')
-    #     print(e)
-
 def send_connection_status_to_firebase(state):
     state['sensor_document'].set({u'isDisconnected': state['isDisconnected']});
-    if state['isDisconnected']:
-        print('"sent is disconnected"')
-    else:
-        print('sent "sensor is not disconnected"')
-    
-
 
 def send_temp_to_firebase(state):
     new_doc = state['temps_collection'].document()
     new_temp = state["current_temp"]
-    print('trying to set')
     new_doc.set(new_temp.to_dict(firestore_timestamp=True))
     print("Pushed: {0}".format(str(new_temp)))
 
-def send_text_if_required(state):
-    current_temp = state["current_temp"].temp
-    under_low_threshold = current_temp < state["low_threshold"]
-    over_high_threshold = current_temp > state["high_threshold"]
+def send_text_if_required_process(state):
+    try:
+        current_temp = state["current_temp"].temp
+        under_low_threshold = current_temp < state["low_threshold"]
+        over_high_threshold = current_temp > state["high_threshold"]
 
-    if under_low_threshold or over_high_threshold:
-            fiveSeconds = datetime.timedelta(0,3)
-            now = datetime.datetime.now()
-            if state['last_text_time'] + fiveSeconds < now:
-                # TODO: Change print to be high or low dependent
-                print('sending text')
-                # TODO: Add messages from local state once pulling FB is done
-                state['twilio_client'].messages.create(
-                    body='hey :)',
-                    from_='+12054984327',
-                    to='+16307404172'
-                )
+        if under_low_threshold or over_high_threshold:
+            print('sending text')
+            # TODO: Add messages from local state once pulling FB is done
+            message = state['twilio_client'].messages.create(
+                body='hey :)',
+                from_='+12054984327',
+                to='+16307404172'
+            )
 
-                state['last_text_time'] = now
-            else:
-                print('would text but, buffering for five seconds')
+            print(message.sid)
+        else:
+            print('no text needed')
 
-#TODO: pull_firebase_to_state()
-# pull everything, only thing that needs interpretation is the button
-# print('texting preferences updated')
-# print('display turrned on remotely')
-# print('display turned off remotely')
+    except Exception as e:
+        print('problem sending text:', e)
 
-# TODO: case: button is pressed when website is loaded
-#                 ...(is there an initial get for it's opening state)
+
+# TODO: do this method
+# def update_state_from_firebase_process(state):
+    # print('texting preferences updated')
+    # print('display turrned on remotely')
+    # print('display turned off remotely')
+
 
 
 def update_display_process(state):
@@ -178,6 +164,7 @@ def main():
 
     GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
     GPIO.setup(PUSH_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     
     GPIO.output(BACKLIGHT_PIN, 1)
 
@@ -188,25 +175,32 @@ def main():
     disp.display()
     sensor = W1ThermSensor()
     db = firestore.client()
-    temps_collection = db.collection(u"temps")
-    sensor_document = db.collection(u"toggles").document(u"sensor")
     
     GPIO.output(BACKLIGHT_PIN, 0)
 
     state = {}
+    # Hardware Status
     state['isDisconnected'] = False
+    state['isPressed'] = False
+    state['isOn'] = True # Switch is on
+    state['update_display'] = False
+    # Hardware Object Instances
+    state['sensor'] = sensor
     state['font'] = font
     state['disp'] = disp
+    # Temp
     state['current_temp'] = Temperature(0.0)
-    state['update_display'] = False
-    state['isPressed'] = False
-    state['sensor'] = sensor
-    state['temps_collection'] = temps_collection
-    state['sensor_document'] = sensor_document
-    state['last_text_time'] = datetime.datetime.now()
-    state['twilio_client'] = Client(TwilioCreds().sid, TwilioCreds.auth_token)
-    state['low_threshhold'] = 20
-    state['high_threshhold'] = 35
+    # Firebase docs/collections
+    state['temps_collection'] = db.collection(u"temps")
+    state['sensor_document'] = db.collection(u"toggles").document(u"sensor")
+    # Twilio Object
+    state['twilio_client'] = Client(TwilioCreds().sid, TwilioCreds().auth_token)
+    # Local state from firebase
+    state['low_message'] = 'temp went too low'
+    state['high_message'] = 'temp '
+    state['number_to_text'] = '+16307404172'
+    state['low_threshold'] = 10
+    state['high_threshold'] = 28
 
     def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN):
@@ -218,19 +212,27 @@ def main():
             disp.display()
             GPIO.output(BACKLIGHT_PIN, 0)
 
-    #TODO:
-    #def switch_flipped
+    def switch_flipped(pin):
+        if GPIO.input(SWITCH_PIN):
+            print('switch is up')
+            # TODO: sed switch on to firebase
+        else:
+            print('switch is down');
+            # TODO: send switch off to firebase
 
     # Interrupts:
     GPIO.add_event_detect(PUSH_BUTTON_PIN, edge=GPIO.BOTH, callback=button_pressed, bouncetime=50)
-    # TODO: GPIO.add_event_detect(SWITCH_PIN, edge=GPIO.BOTH, callback=switch_flipped, bouncetime=50)
+    # TODO: switch_pin isn't detecting changes, always 0.
+    GPIO.add_event_detect(SWITCH_PIN, edge=GPIO.BOTH, callback=switch_flipped, bouncetime=50)
 
     def run_threaded(job_function, state):
         job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
         job_thread.start()
 
-    schedule.every(2).seconds.do(run_threaded, job_function=read_temp_process, state=state)
     schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
+    schedule.every(2).seconds.do(run_threaded, job_function=read_temp_process, state=state)
+    schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
+    #schedule.every(1).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
 
     while True:
         schedule.run_pending()
