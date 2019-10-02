@@ -1,0 +1,22 @@
+html,
+body {
+    background: #f0f7ee;
+    color: #444;
+    font-family: 'Helvetica Neue', arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+// * {
+//     box-sizing: border-box;
+// }
+
+#app {
+    height: 100%;
+    text-align: center;
+}

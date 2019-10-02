@@ -1,0 +1,40 @@
+@import '../../style/variables';
+
+.Grid {
+    display: grid;
+    gap: 30px;
+    grid-template-areas: 't g g g' 'c c c c';
+    grid-template-rows: 18em auto;
+
+    @media only screen and (max-width: $mobileLayoutCutoff) {
+        grid-template-areas: 'g' 't' 'c';
+        grid-template-rows: 14em auto auto;
+    }
+
+    margin: 5% auto;
+    max-width: 1350px;
+    width: 90%;
+}
+
+.Card {
+    align-items: center;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.TempCard {
+    grid-area: t;
+}
+
+.GraphCard {
+    grid-area: g;
+}
+
+.ControlsCard {
+    grid-area: c;
+    position: relative;
+}
