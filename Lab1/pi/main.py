@@ -31,6 +31,10 @@ from PIL import ImageFont
 # Pins
 import RPi.GPIO as GPIO
 
+# Twilio Texting
+from TwilioCreds import TwilioCreds
+from twilio.rest import Client
+
 # Process stuff
 import schedule
 import threading
@@ -77,11 +81,11 @@ def read_temp_process(state):
         print('problem pushing isDisconnected')
         print(e)
 
-    try:
-        send_text_if_required(state)
-    except Exception as e:
-        print('problem sending text')
-        print(e)
+    # try:
+    #     send_text_if_required(state)
+    # except Exception as e:
+    #     print('problem sending text')
+    #     print(e)
 
 def send_connection_status_to_firebase(state):
     state['sensor_document'].set({u'isDisconnected': state['isDisconnected']});
@@ -95,6 +99,7 @@ def send_connection_status_to_firebase(state):
 def send_temp_to_firebase(state):
     new_doc = state['temps_collection'].document()
     new_temp = state["current_temp"]
+    print('trying to set')
     new_doc.set(new_temp.to_dict(firestore_timestamp=True))
     print("Pushed: {0}".format(str(new_temp)))
 
@@ -103,11 +108,18 @@ def send_text_if_required(state):
     under_low_threshold = current_temp < state["low_threshold"]
     over_high_threshold = current_temp > state["high_threshold"]
 
-    if under_low_threshold or over_high_threshold
+    if under_low_threshold or over_high_threshold:
             fiveSeconds = datetime.timedelta(0,3)
             now = datetime.datetime.now()
             if state['last_text_time'] + fiveSeconds < now:
-                #TODO: send it
+                # TODO: Change print to be high or low dependent
+                print('sending text')
+                # TODO: Add messages from local state once pulling FB is done
+                state['twilio_client'].messages.create(
+                    body='hey :)',
+                    from_='+12054984327',
+                    to='+16307404172'
+                )
 
                 state['last_text_time'] = now
             else:
@@ -192,6 +204,9 @@ def main():
     state['temps_collection'] = temps_collection
     state['sensor_document'] = sensor_document
     state['last_text_time'] = datetime.datetime.now()
+    state['twilio_client'] = Client(TwilioCreds().sid, TwilioCreds.auth_token)
+    state['low_threshhold'] = 20
+    state['high_threshhold'] = 35
 
     def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN):
@@ -214,7 +229,7 @@ def main():
         job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
         job_thread.start()
 
-    schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
+    schedule.every(2).seconds.do(run_threaded, job_function=read_temp_process, state=state)
     schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
 
     while True:
