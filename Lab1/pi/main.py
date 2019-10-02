@@ -70,8 +70,8 @@ def read_temp_process(state):
         print('sensor unpluged')
     if not state['isDisconnected']:
         try:
-            # send_temp_to_firebase(state)
-            print('(firebase pushing commented out)')
+            send_temp_to_firebase(state)
+            # print('(firebase pushing commented out)')
         except Exception as e:
             print('problem pushing to firebase:')
             print(e)
@@ -92,13 +92,20 @@ def send_temp_to_firebase(state):
 
 def send_text_if_required_process(state):
     try:
-        current_temp = state["current_temp"].temp
+        current_temp = state["current_temp"].temp 
         under_low_threshold = current_temp < state["low_threshold"]
         over_high_threshold = current_temp > state["high_threshold"]
 
         if under_low_threshold or over_high_threshold:
             print('sending text')
-            # TODO: Add messages from local state once pulling FB is done
+            # TODO: Uncomment this if update_state_from_firebase_process works
+            msg = state["low_message"] if under_low_threshold else state["high_message"]
+            to = '1+' state["number_to_text"].replace('-','')
+            # message = state['twilio_client'].messages.create(
+            #     body='msg',
+            #     from_='+12054984327',
+            #     to=to #TODO: Parse out '-' and add '+1'
+            # )
             message = state['twilio_client'].messages.create(
                 body='hey :)',
                 from_='+12054984327',
@@ -112,14 +119,18 @@ def send_text_if_required_process(state):
     except Exception as e:
         print('problem sending text:', e)
 
+def update_state_from_firebase_process(state):
+    try:
+        prefs = state['prefs_document'].get().to_dict()
+        print('got', prefs)
+        state['low_message'] = prefs.low_msg
+        state['high_message'] = prefs.high_msg
+        state['number_to_text'] = prefs.phonenumber
+        state['low_threshold'] = prefs.low_temp
+        state['high_threshold'] = prefs.max_temp
 
-# TODO: do this method
-# def update_state_from_firebase_process(state):
-    # print('texting preferences updated')
-    # print('display turrned on remotely')
-    # print('display turned off remotely')
-
-
+    except:
+        print('error getting prefs')
 
 def update_display_process(state):
     if state['update_display'] and state['isPressed']:
@@ -156,6 +167,8 @@ def update_display_process(state):
 
 def main():
 
+    sleep(.5)
+
     # Pins
     GPIO.setmode(GPIO.BCM)
     BACKLIGHT_PIN = 26
@@ -173,7 +186,7 @@ def main():
     disp.begin(contrast=60)
     disp.clear()
     disp.display()
-    sensor = W1ThermSensor()
+    # sensor = W1ThermSensor()
     db = firestore.client()
     
     GPIO.output(BACKLIGHT_PIN, 0)
@@ -182,7 +195,7 @@ def main():
     # Hardware Status
     state['isDisconnected'] = False
     state['isPressed'] = False
-    state['isOn'] = True # Switch is on
+    state['isOn'] = not GPIO.input(SWITCH_PIN)
     state['update_display'] = False
     # Hardware Object Instances
     state['sensor'] = sensor
@@ -192,7 +205,10 @@ def main():
     state['current_temp'] = Temperature(0.0)
     # Firebase docs/collections
     state['temps_collection'] = db.collection(u"temps")
+    state['pref_document'] = db.collection(u"texting").document(u"prefs")
     state['sensor_document'] = db.collection(u"toggles").document(u"sensor")
+    state['switch_document'] = db.collection(u"toggles").document(u"switch")
+    state['button_document'] = db.collection(u"toggles").document(u"button")
     # Twilio Object
     state['twilio_client'] = Client(TwilioCreds().sid, TwilioCreds().auth_token)
     # Local state from firebase
@@ -200,7 +216,14 @@ def main():
     state['high_message'] = 'temp '
     state['number_to_text'] = '+16307404172'
     state['low_threshold'] = 10
-    state['high_threshold'] = 28
+    state['high_threshold'] = 30
+    # Processes
+    state['update_display_process'] = ''
+    state['read_temp_process'] = ''
+    state['send_text_if_required_process'] = ''
+    state['update_state_from_firebase_process'] = ''
+
+    state['button_document'].set({u'isOn': GPIO.input(PUSH_BUTTON_PIN)})
 
     def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN):
@@ -213,26 +236,36 @@ def main():
             GPIO.output(BACKLIGHT_PIN, 0)
 
     def switch_flipped(pin):
-        if GPIO.input(SWITCH_PIN):
-            print('switch is up')
-            # TODO: sed switch on to firebase
+        sleep(.02)
+        if not GPIO.input(SWITCH_PIN):
+            print('switch is on')
+            state['isOn'] = True
+            state['switch_document'].set({u'isOn': True})
+            start_processes()
+            print('processes resumed')
         else:
-            print('switch is down');
-            # TODO: send switch off to firebase
+            print('switch is off');
+            state['isOn'] = False
+            state['switch_document'].set({u'isOn': False})
+            schedule.clear()
+            print('processes halted')
 
     # Interrupts:
     GPIO.add_event_detect(PUSH_BUTTON_PIN, edge=GPIO.BOTH, callback=button_pressed, bouncetime=50)
-    # TODO: switch_pin isn't detecting changes, always 0.
-    GPIO.add_event_detect(SWITCH_PIN, edge=GPIO.BOTH, callback=switch_flipped, bouncetime=50)
+    GPIO.add_event_detect(SWITCH_PIN, edge=GPIO.BOTH, callback=switch_flipped, bouncetime=200)
 
     def run_threaded(job_function, state):
         job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
         job_thread.start()
 
-    schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
-    schedule.every(2).seconds.do(run_threaded, job_function=read_temp_process, state=state)
-    schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
-    #schedule.every(1).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
+    def start_processes():
+        # schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
+        # schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
+        # schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
+        schedule.every(1).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
+
+    if state['isOn']:
+        start_processes()
 
     while True:
         schedule.run_pending()
