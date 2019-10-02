@@ -58,6 +58,37 @@ export default class Graph extends Component<MyProps, MyState> {
                         });
                     }
                 });
+                for (let i = 0; i < dataArray.length - 1; i++) {
+                    // if the point in front of it is more than 2 seconds away,
+                    // add a -100 immedately after *the point* and immediately
+                    // before the next
+                    const nextPointIsNegative = dataArray[i + 1].temp === -100;
+                    const currPointIsNegative = dataArray[i].temp === -100;
+                    const nextPointUnixSeconds =
+                        dataArray[i + 1].timestamp.getTime() / 1000;
+                    const currPointUnixSeconds =
+                        dataArray[i].timestamp.getTime() / 1000;
+                    if (
+                        nextPointUnixSeconds > currPointUnixSeconds + 3 &&
+                        !currPointIsNegative &&
+                        !nextPointIsNegative
+                    ) {
+                        const imedAfter = {
+                            timestamp: new Date(
+                                currPointUnixSeconds * 1000 + 200
+                            ),
+                            temp: -100
+                        };
+                        const imedBefore = {
+                            timestamp: new Date(
+                                nextPointUnixSeconds * 1000 - 200
+                            ),
+                            temp: -100
+                        };
+                        dataArray.splice(i + 1, 0, imedAfter);
+                        dataArray.splice(i + 2, 0, imedBefore);
+                    }
+                }
                 // Listen for new temps
                 newTempObj.onSnapshot(snapShot => {
                     snapShot.forEach(doc => {
@@ -99,9 +130,9 @@ export default class Graph extends Component<MyProps, MyState> {
             dataArrayEdit[dataArrayEdit.length - 1].timestamp.getTime() / 1000;
         const currentTimeUnixSeconds = fiveMinExtent[1].getTime() / 1000;
 
-        if (mostRecentPointUnixSeconds + 1 < currentTimeUnixSeconds) {
+        if (mostRecentPointUnixSeconds + 3 < currentTimeUnixSeconds) {
             dataArrayEdit.push({
-                timestamp: new Date((mostRecentPointUnixSeconds + 1) * 1000),
+                timestamp: new Date((mostRecentPointUnixSeconds + 3) * 1000),
                 temp: -100
             });
             this.setState({ dataArray: dataArrayEdit });
