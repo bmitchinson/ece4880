@@ -215,7 +215,7 @@ export default class Form extends Component<MyProps, MyState> {
         textingRef.update({
             high_msg: highTempMsgInput,
             low_msg: lowTempMsgInput,
-            tow_temp: lowTempThreshInput,
+            low_temp: lowTempThreshInput,
             max_temp: highTempThreshInput,
             phonenumber: phoneNumInput
         });
