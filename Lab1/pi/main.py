@@ -64,14 +64,50 @@ def read_temp_process(state):
     except Exception as e:
         state['isDisconnected'] = True
         print('sensor unpluged')
+    if not state['isDisconnected']:
+        try:
+            send_temp_to_firebase(state)
+        except Exception as e:
+            print('problem pushing to firebase:')
+            print(e)
+    try:
+        send_connection_status_to_firebase(state)
+    except Exception as e:
+        print('problem pushing isDisconnected')
+        print(e)
+
+    # TODO:
+    #if pi_should_text
+        # send_text()
+
+def send_connection_status_to_firebase(state):
+    state['sensor_document'].set({u'isDisconnected': state['isDisconnected']});
+    if state['isDisconnected']:
+        print('"sent is disconnected"')
+    else:
+        print('sent "sensor is not disconnected"')
+    
 
 
-def update_firestore_state_process(state, individual_run=False):
-    db = firestore.client()
-    prefs = db.collection(u"preferences")
-    while True:
-        sleep(SLEEP_DURATION)
-        # read state from firestore
+def send_temp_to_firebase(state):
+    new_doc = state['temps_collection'].document()
+    new_temp = state["current_temp"]
+    new_doc.set(new_temp.to_dict(firestore_timestamp=True))
+    print("Pushed: {0}".format(str(new_temp)))
+
+#TODO: pi_should_text()
+
+#TODO: send_text()
+
+#TODO: pull_firebase_to_state()
+# pull everything, only thing that needs interpretation is the button
+# print('texting preferences updated')
+# print('display turrned on remotely')
+# print('display turned off remotely')
+
+# TODO: case: button is pressed when website is loaded
+#                 ...(is there an initial get for it's opening state)
+
 
 def update_display_process(state):
     if state['update_display'] and state['isPressed']:
@@ -90,31 +126,21 @@ def update_display_process(state):
               disp.image(image)
               disp.display()
 
-        def write_temp_to_lcd(temperature : float):
+        def write_temp_to_lcd(temperature : Temperature):
               image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
               draw = ImageDraw.Draw(image)
               draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-              formatted_str = "Temp: %.2f." % temperature
+              formatted_str = "Temp: %.2f." % temperature.temp
               draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
               disp.image(image)
               disp.display()
 
-        current_temp = state["current_temp"].temp
-        # print('curr temp in display %d' % current_temp)
+
+        current_temp = state["current_temp"]
         if state['isDisconnected']:
             write_unpluged_to_lcd()
         else:
             write_temp_to_lcd(current_temp)
-
-def hardware_io_process(state, individual_run=False):
-    # lol we should figure this out....
-    while True:
-        print('hardware sucks')
-        sleep(SLEEP_DURATION)
-
-def togg_togg(state):
-    state['isDisconnected'] = not state['isDisconnected']
-    state['update_display'] = True
 
 def main():
 
@@ -136,7 +162,8 @@ def main():
     disp.display()
     sensor = W1ThermSensor()
     db = firestore.client()
-    temps = db.collection(u"temps")
+    temps_collection = db.collection(u"temps")
+    sensor_document = db.collection(u"toggles").document(u"sensor")
     
     GPIO.output(BACKLIGHT_PIN, 0)
 
@@ -148,9 +175,10 @@ def main():
     state['update_display'] = False
     state['isPressed'] = False
     state['sensor'] = sensor
-    state['temps'] = temps
+    state['temps_collection'] = temps_collection
+    state['sensor_document'] = sensor_document
 
-    def update_is_pressed(pin):
+    def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN):
             state['isPressed'] = True
             GPIO.output(BACKLIGHT_PIN, 1)
@@ -160,8 +188,12 @@ def main():
             disp.display()
             GPIO.output(BACKLIGHT_PIN, 0)
 
+    #TODO:
+    #def switch_flipped
+
     # Interrupts:
-    GPIO.add_event_detect(PUSH_BUTTON_PIN, edge=GPIO.BOTH, callback=update_is_pressed, bouncetime=50)
+    GPIO.add_event_detect(PUSH_BUTTON_PIN, edge=GPIO.BOTH, callback=button_pressed, bouncetime=50)
+    # TODO: GPIO.add_event_detect(SWITCH_PIN, edge=GPIO.BOTH, callback=switch_flipped, bouncetime=50)
 
     def run_threaded(job_function, state):
         job_thread = threading.Thread(target=job_function, kwargs=dict(state=state))
