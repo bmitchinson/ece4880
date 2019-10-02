@@ -3,6 +3,7 @@
 
 # for delaying each individual process ( so they take turns better )
 from time import sleep
+import datetime
 
 # thermometer library
 from w1thermsensor import W1ThermSensor
@@ -76,9 +77,11 @@ def read_temp_process(state):
         print('problem pushing isDisconnected')
         print(e)
 
-    # TODO:
-    #if pi_should_text
-        # send_text()
+    try:
+        send_text_if_required(state)
+    except Exception as e:
+        print('problem sending text')
+        print(e)
 
 def send_connection_status_to_firebase(state):
     state['sensor_document'].set({u'isDisconnected': state['isDisconnected']});
@@ -95,9 +98,20 @@ def send_temp_to_firebase(state):
     new_doc.set(new_temp.to_dict(firestore_timestamp=True))
     print("Pushed: {0}".format(str(new_temp)))
 
-#TODO: pi_should_text()
+def send_text_if_required(state):
+    current_temp = state["current_temp"].temp
+    under_low_threshold = current_temp < state["low_threshold"]
+    over_high_threshold = current_temp > state["high_threshold"]
 
-#TODO: send_text()
+    if under_low_threshold or over_high_threshold
+            fiveSeconds = datetime.timedelta(0,3)
+            now = datetime.datetime.now()
+            if state['last_text_time'] + fiveSeconds < now:
+                #TODO: send it
+
+                state['last_text_time'] = now
+            else:
+                print('would text but, buffering for five seconds')
 
 #TODO: pull_firebase_to_state()
 # pull everything, only thing that needs interpretation is the button
@@ -177,6 +191,7 @@ def main():
     state['sensor'] = sensor
     state['temps_collection'] = temps_collection
     state['sensor_document'] = sensor_document
+    state['last_text_time'] = datetime.datetime.now()
 
     def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN):
