@@ -92,26 +92,20 @@ def send_temp_to_firebase(state):
 
 def send_text_if_required_process(state):
     try:
-        current_temp = state['current_temp'].temp 
-        under_low_threshold = current_temp < state["low_threshold"]
-        over_high_threshold = current_temp > state["high_threshold"]
+        current_temp = state['current_temp'].temp
+        under_low_threshold = current_temp < float(state["low_threshold"])
+        over_high_threshold = current_temp > float(state["high_threshold"])
 
         if under_low_threshold or over_high_threshold:
             print('sending text')
             # TODO: Uncomment this if update_state_from_firebase_process works
             msg = state['low_msg'] if under_low_threshold else state["high_msg"]
-            to = '1+' + state['number_to_text'].replace('-','')
-            # message = state['twilio_client'].messages.create(
-            #     body='msg',
-            #     from_='+12054984327',
-            #     to=to #TODO: Parse out '-' and add '+1'
-            # )
+            to = '+1{0}'.format(state['number_to_text'].replace('-',''))
             message = state['twilio_client'].messages.create(
-                body='hey :)',
+                body='msg',
                 from_='+12054984327',
-                to='+16307404172'
+                to=to
             )
-
             print(message.sid)
         else:
             print('no text needed')
@@ -180,7 +174,7 @@ def main():
     GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
     GPIO.setup(PUSH_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     GPIO.setup(SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    
+
     GPIO.output(BACKLIGHT_PIN, 1)
 
     disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
@@ -190,8 +184,9 @@ def main():
     disp.display()
     # sensor = W1ThermSensor()
     db = firestore.client()
-    
+
     GPIO.output(BACKLIGHT_PIN, 0)
+    sensor = W1ThermSensor()
 
     state = {}
     # Hardware Status
@@ -200,7 +195,7 @@ def main():
     state['isOn'] = not GPIO.input(SWITCH_PIN)
     state['update_display'] = False
     # Hardware Object Instances
-    # state['sensor'] = sensor
+    state['sensor'] = sensor
     state['font'] = font
     state['disp'] = disp
     # Temp
@@ -228,7 +223,7 @@ def main():
     state['button_document'].set({u'isOn': GPIO.input(PUSH_BUTTON_PIN)})
 
     def button_pressed(pin):
-        if GPIO.input(PUSH_BUTTON_PIN):
+        if GPIO.input(PUSH_BUTTON_PIN) and state['isOn']:
             state['isPressed'] = True
             GPIO.output(BACKLIGHT_PIN, 1)
         else:
@@ -249,6 +244,7 @@ def main():
             print('switch is off');
             state['isOn'] = False
             state['switch_document'].set({u'isOn': False})
+            GPIO.output(BACKLIGHT_PIN, 0)
             schedule.clear()
             print('processes halted')
 
@@ -261,9 +257,9 @@ def main():
         job_thread.start()
 
     def start_processes():
-        # schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
-        # schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
-        # schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
+        schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
+        schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
+        schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
         schedule.every(2).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
 
     if state['isOn']:
