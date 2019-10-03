@@ -55,10 +55,17 @@ export default class Form extends Component<MyProps, MyState> {
     }
 
     componentDidMount() {
-        // buttonRef.onSnapshot(doc => {
-        //     const buttonIsPressed = doc.data().buttonIsPressed;
-        //     this.setState(prev => ({ ...prev, buttonIsPressed }));
-        // });
+        textingRef.get().then(doc => {
+            this.setState({
+                inputs: {
+                    phoneNumInput: doc.data().phonenumber,
+                    highTempMsgInput: doc.data().high_msg,
+                    lowTempMsgInput: doc.data().low_msg,
+                    highTempThreshInput: doc.data().max_temp,
+                    lowTempThreshInput: doc.data().low_temp
+                }
+            });
+        });
         buttonRef.onSnapshot(doc => {
             const buttonIsPressed = doc.data().isPressed;
             this.setState({ buttonIsPressed });
