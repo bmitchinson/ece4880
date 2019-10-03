@@ -98,7 +98,6 @@ def send_text_if_required_process(state):
 
         if under_low_threshold or over_high_threshold:
             print('sending text')
-            # TODO: Uncomment this if update_state_from_firebase_process works
             msg = state['low_msg'] if under_low_threshold else state["high_msg"]
             to = '+1{0}'.format(state['number_to_text'].replace('-',''))
             message = state['twilio_client'].messages.create(
@@ -116,14 +115,13 @@ def send_text_if_required_process(state):
 def update_state_from_firebase_process(state):
     try:
         prefs = state['prefs_document'].get().to_dict()
-        print(prefs)
         state['low_msg'] = prefs['low_msg']
         state['high_msg'] = prefs['high_msg']
         state['number_to_text'] = prefs['phonenumber']
         state['low_threshold'] = prefs['low_temp']
         state['high_threshold'] = prefs['max_temp']
-        # TODO: why 
-        # to = "1+" + state['number_to_text'].replace('-','')
+        button_doc = state['button_document'].get().to_dict()
+        state['isPressed'] = button_doc['isPressed']
 
     except Exception as e:
         print('error getting prefs:', e)
@@ -182,11 +180,10 @@ def main():
     disp.begin(contrast=60)
     disp.clear()
     disp.display()
-    # sensor = W1ThermSensor()
+    sensor = W1ThermSensor()
     db = firestore.client()
 
     GPIO.output(BACKLIGHT_PIN, 0)
-    sensor = W1ThermSensor()
 
     state = {}
     # Hardware Status
@@ -220,16 +217,18 @@ def main():
     state['send_text_if_required_process'] = ''
     state['update_state_from_firebase_process'] = ''
 
-    state['button_document'].set({u'isOn': GPIO.input(PUSH_BUTTON_PIN)})
+    state['button_document'].set({u'isPressed': GPIO.input(PUSH_BUTTON_PIN) is 1})
 
     def button_pressed(pin):
         if GPIO.input(PUSH_BUTTON_PIN) and state['isOn']:
             state['isPressed'] = True
+            state['button_document'].set({u'isPressed': True})
             GPIO.output(BACKLIGHT_PIN, 1)
         else:
             state['isPressed'] = False
             disp.clear()
             disp.display()
+            state['button_document'].set({u'isPressed': False})
             GPIO.output(BACKLIGHT_PIN, 0)
 
     def switch_flipped(pin):
@@ -262,6 +261,8 @@ def main():
         schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
         schedule.every(2).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
 
+    # ? Is this working? Would think this might need to be in the while loop
+    #   Pretty sure it's working tho so I guess don't touch it?
     if state['isOn']:
         start_processes()
 
