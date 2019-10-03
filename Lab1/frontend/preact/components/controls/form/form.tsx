@@ -66,6 +66,7 @@ export default class Form extends Component<MyProps, MyState> {
                 }
             });
         });
+        this.enableButtonIfAllValid();
         buttonRef.onSnapshot(doc => {
             const buttonIsPressed = doc.data().isPressed;
             this.setState({ buttonIsPressed });
