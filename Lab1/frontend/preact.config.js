@@ -13,5 +13,12 @@ import asyncPlugin from 'preact-cli-plugin-async';
 export default function(config, env, helpers) {
     preactCliTypeScript(config);
     asyncPlugin(config);
-    config.resolve.alias['preact-cli-entrypoint'] = resolve(__dirname, 'preact/index.js');
+    config.resolve.alias['preact-cli-entrypoint'] = resolve(
+        __dirname,
+        'preact/index.js'
+    );
+    if (env.production) {
+        let { index } = helpers.getPluginsByName(config, 'UglifyJsPlugin')[0];
+        config.plugins.splice(index, 1);
+    }
 }
