@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/grpc_helpers.py", line 57, in error_remapped_callable
+    return callable_(*args, **kwargs)
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/grpc/_channel.py", line 565, in __call__
+    return _end_unary_response_blocking(state, call, False, None)
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/grpc/_channel.py", line 467, in _end_unary_response_blocking
+    raise _Rendezvous(state, None, None, deadline)
+grpc._channel._Rendezvous: <_Rendezvous of RPC that terminated with:
+	status = StatusCode.UNAVAILABLE
+	details = "DNS resolution failed"
+	debug_error_string = "{"created":"@1570068387.337140185","description":"Failed to pick subchannel","file":"src/core/ext/filters/client_channel/client_channel.cc","file_line":3818,"referenced_errors":[{"created":"@1570068387.337121330","description":"Resolver transient failure","file":"src/core/ext/filters/client_channel/resolving_lb_policy.cc","file_line":268,"referenced_errors":[{"created":"@1570068387.337117893","description":"DNS resolution failed","file":"src/core/ext/filters/client_channel/resolver/dns/c_ares/dns_resolver_ares.cc","file_line":357,"grpc_status":14,"referenced_errors":[{"created":"@1570068387.337091695","description":"C-ares status is not ARES_SUCCESS: Could not contact DNS servers","file":"src/core/ext/filters/client_channel/resolver/dns/c_ares/grpc_ares_wrapper.cc","file_line":244,"referenced_errors":[{"created":"@1570068387.336988205","description":"C-ares status is not ARES_SUCCESS: Could not contact DNS servers","file":"src/core/ext/filters/client_channel/resolver/dns/c_ares/grpc_ares_wrapper.cc","file_line":244}]}]}]}]}"
+>
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "./main.py", line 273, in <module>
+    main()
+  File "./main.py", line 223, in main
+    state['button_document'].set({u'isOn': GPIO.input(PUSH_BUTTON_PIN)})
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/cloud/firestore_v1/document.py", line 234, in set
+    write_results = batch.commit()
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/cloud/firestore_v1/batch.py", line 147, in commit
+    metadata=self._client._rpc_metadata,
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/cloud/firestore_v1/gapic/firestore_client.py", line 1042, in commit
+    request, retry=retry, timeout=timeout, metadata=metadata
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/gapic_v1/method.py", line 143, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/retry.py", line 273, in retry_wrapped_func
+    on_error=on_error,
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/retry.py", line 182, in retry_target
+    return target()
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/timeout.py", line 214, in func_with_timeout
+    return func(*args, **kwargs)
+  File "/home/pi/.conda/envs/4880-l1/lib/python3.4/site-packages/google/api_core/grpc_helpers.py", line 59, in error_remapped_callable
+    six.raise_from(exceptions.from_grpc_error(exc), exc)
+  File "<string>", line 3, in raise_from
+google.api_core.exceptions.ServiceUnavailable: 503 DNS resolution failed

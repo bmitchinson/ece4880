@@ -46,6 +46,11 @@ DC = 23
 RST = 24
 SPI_PORT = 0
 SPI_DEVICE = 0
+BACKLIGHT_PIN = 26
+PUSH_BUTTON_PIN = 17
+SWITCH_PIN = 27
+
+
 
 disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
 font = ImageFont.load_default()
@@ -59,6 +64,12 @@ disp.display()
 
 def read_temp_process(state):
     state['update_display'] = True
+    if not state['sensor']:
+        try:
+            state['sensor'] = W1ThermSensor()
+        except Exception as e:
+            print('sensor not yet plugged in')
+
     sensor = state['sensor']
     try:
         new_temp = Temperature(sensor.get_temperature())
@@ -99,9 +110,10 @@ def send_text_if_required_process(state):
         if under_low_threshold or over_high_threshold:
             print('sending text')
             msg = state['low_msg'] if under_low_threshold else state["high_msg"]
+            msg = '{0}\n\nCurrent Temp: {1}\n- TempCtrl'.format(msg, '%.2f'% state['current_temp'].temp)
             to = '+1{0}'.format(state['number_to_text'].replace('-',''))
             message = state['twilio_client'].messages.create(
-                body='msg',
+                body=msg,
                 from_='+12054984327',
                 to=to
             )
@@ -126,38 +138,46 @@ def update_state_from_firebase_process(state):
     except Exception as e:
         print('error getting prefs:', e)
 
+
 def update_display_process(state):
-    if state['update_display'] and state['isPressed']:
+  if state['update_display']:
         state['update_display'] = False
-        disp = state['disp']
-        font = state['font']
-        disp.clear()
-        disp.display()
+        if state['isPressed']:
+            disp = state['disp']
+            font = state['font']
+            disp.clear()
+            disp.display()
 
-        def write_unpluged_to_lcd():
-              image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-              draw = ImageDraw.Draw(image)
-              draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-              formatted_str = "! DISCONNECTED !"
-              draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
-              disp.image(image)
-              disp.display()
+            def write_unpluged_to_lcd():
+                  image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+                  draw = ImageDraw.Draw(image)
+                  draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+                  formatted_str = "!UNPLUGGED!"
+                  draw.text((2,LCD.LCDHEIGHT/2), formatted_str, font=font)
+                  disp.image(image)
+                  disp.display()
 
-        def write_temp_to_lcd(temperature : Temperature):
-              image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-              draw = ImageDraw.Draw(image)
-              draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-              formatted_str = "Temp: %.2f." % temperature.temp
-              draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
-              disp.image(image)
-              disp.display()
+            def write_temp_to_lcd(temperature : Temperature):
+                  GPIO.output(BACKLIGHT_PIN, 1)
+                  image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+                  draw = ImageDraw.Draw(image)
+                  draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+                  formatted_str = "Temp: %.2f." % temperature.temp
+                  draw.text((8,LCD.LCDHEIGHT/2), formatted_str, font=font)
+                  disp.image(image)
+                  disp.display()
 
 
-        current_temp = state['current_temp']
-        if state['isDisconnected']:
-            write_unpluged_to_lcd()
+            current_temp = state['current_temp']
+            if state['isDisconnected']:
+                write_unpluged_to_lcd()
+            else:
+                write_temp_to_lcd(current_temp)
         else:
-            write_temp_to_lcd(current_temp)
+            GPIO.output(BACKLIGHT_PIN, 0)
+            state['disp'].clear()
+            state['disp'].display()
+
 
 def main():
 
@@ -165,9 +185,6 @@ def main():
 
     # Pins
     GPIO.setmode(GPIO.BCM)
-    BACKLIGHT_PIN = 26
-    PUSH_BUTTON_PIN = 17
-    SWITCH_PIN = 27
 
     GPIO.setup(BACKLIGHT_PIN, GPIO.OUT)
     GPIO.setup(PUSH_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
@@ -180,7 +197,11 @@ def main():
     disp.begin(contrast=60)
     disp.clear()
     disp.display()
-    sensor = W1ThermSensor()
+    try:
+      sensor = W1ThermSensor()
+    except Exception as e:
+      print('sensor unplug on start up')
+      sensor = None
     db = firestore.client()
 
     GPIO.output(BACKLIGHT_PIN, 0)
@@ -223,7 +244,6 @@ def main():
         if GPIO.input(PUSH_BUTTON_PIN) and state['isOn']:
             state['isPressed'] = True
             state['button_document'].set({u'isPressed': True})
-            GPIO.output(BACKLIGHT_PIN, 1)
         else:
             state['isPressed'] = False
             disp.clear()
@@ -244,6 +264,8 @@ def main():
             state['isOn'] = False
             state['switch_document'].set({u'isOn': False})
             GPIO.output(BACKLIGHT_PIN, 0)
+            state['disp'].clear()
+            state['disp'].display()
             schedule.clear()
             print('processes halted')
 
@@ -256,10 +278,10 @@ def main():
         job_thread.start()
 
     def start_processes():
-        schedule.every(0.01).seconds.do(run_threaded, job_function=update_display_process, state=state)
+        schedule.every(0.005).seconds.do(run_threaded, job_function=update_display_process, state=state)
         schedule.every(1).seconds.do(run_threaded, job_function=read_temp_process, state=state)
         schedule.every(5).seconds.do(run_threaded, job_function=send_text_if_required_process, state=state)
-        schedule.every(2).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
+        schedule.every(1).seconds.do(run_threaded, job_function=update_state_from_firebase_process, state=state)
 
     # ? Is this working? Would think this might need to be in the while loop
     #   Pretty sure it's working tho so I guess don't touch it?
@@ -268,7 +290,7 @@ def main():
 
     while True:
         schedule.run_pending()
-        sleep(0.01)
+        sleep(0.005)
 
 if __name__ == "__main__":
     main()
