@@ -1,14 +1,13 @@
 import sys
 import os
-from dotenv import load_dotenv
 from twilio.rest import Client
-
-load_dotenv()
+from TwilioCreds import TwilioCreds
 
 def send_message(message_body, to_phone_number):
-    account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-    auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
+
+    print(TwilioCreds().sid, TwilioCreds().auth_token)
+    
+    client = Client(TwilioCreds().sid, TwilioCreds().auth_token)
 
     message = client.messages.create(
         body=message_body,
@@ -19,4 +18,4 @@ def send_message(message_body, to_phone_number):
     print(message.sid)
 
 if __name__ == '__main__':
-    send_message(sys.argv[1], sys.argv[2])
+    send_message('test', '+16307404172')
