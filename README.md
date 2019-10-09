@@ -7,6 +7,7 @@ Repo for tracking progress on Fall 2019 labs
 #### Due Friday Oct 4th
 Progress Meetings w TA during Sep 16th - 20th
 
-### Lab 2: TBD
+### [Lab 2](https://github.com/bmitchinson/ece4880/tree/master/Lab2)
+#### Due Friday Nov 8th
 
-### Lab 3: TBD
+### [Lab 3](https://github.com/bmitchinson/ece4880/tree/master/Lab3) 
