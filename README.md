@@ -1,7 +1,7 @@
 ## Senior Design ECE:4880
 Repo for tracking progress on Fall 2019 labs
 
-### [Syllabus](https://github.com/bmitchinson/ece4880/blob/master/syllabus.pdf)
+### [Syllabus](https://github.com/bmitchinson/ece4880/blob/master/docs/syllabus.pdf)
 
 ### [Lab 1](https://github.com/bmitchinson/ece4880/tree/master/Lab1) 
 #### Due Friday Oct 4th
