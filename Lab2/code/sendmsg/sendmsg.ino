@@ -1,9 +1,9 @@
 void setup() {
   Serial.begin(9600); // set the baud rate
-  Serial.println("text!"); // print "Ready" once
+  Serial.println("ready"); // print "Ready" once
 }
 
 void loop() {
-  delay(5000); // ms
+  delay(10000); // ms
   Serial.println("sendtext");
 }
