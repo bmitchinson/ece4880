@@ -2,34 +2,27 @@
 
 # for delaying each individual process ( so they take turns better )
 from time import sleep
-
-
-# Pins
-import RPi.GPIO as GPIO
+import serial
 
 # Twilio Texting
-# from TwilioCreds import TwilioCreds
-# from twilio.rest import Client
-
-# Process stuff? If we even need it.
-from multiprocessing import Manager, Process
-import schedule
-import threading
-
-INPUT_PIN = 27
+from TwilioCreds import TwilioCreds
+from twilio.rest import Client
 
 def main():
-    
-    sleep(.1)
+    ser = serial.Serial()
+    ser.baudrate = 9600
+    ser.port = 'COM7'
+    ser.open()
+    sleep(3) # required when opening port
 
-    # Pins
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(SWITCH_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
+    print('Waiting for texts from...')
     while(True):
-        sleep(.33)
-        print(GPIO.input(SWITCH_PIN))
+        sleep(.3)
+        if "sendtext" in str(ser.readline()):
+            sendText()
 
+def sendText():
+    print('send text')
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     main()
