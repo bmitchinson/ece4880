@@ -27,6 +27,8 @@ def sendText():
     client = Client(TwilioCreds().sid(), TwilioCreds().auth_token())
     hours = datetime.now().hour
     minutes = datetime.now().minute
+    if minutes < 10:
+        minutes = 0 + str(minutes) 
 
     msg = f"Critical saftey event at {hours}:{minutes}"
 
