@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-# for delaying each individual process ( so they take turns better )
 from datetime import datetime
+from datetime import timedelta
 from time import sleep
 import serial
 
@@ -12,15 +12,20 @@ from twilio.rest import Client
 def main():
     ser = serial.Serial()
     ser.baudrate = 9600
-    ser.port = 'COM7'
+    #ser.port = 'COM7'
+    ser.port = '/dev/cu.usbmodem14201'
     ser.open()
     sleep(3) # required when opening port
+    delta = timedelta(seconds=3)
+    time_can_send_again = datetime.now() + delta
 
     print('Waiting for texts')
     while(True):
-        sleep(.3)
-        if "sendtext" in str(ser.readline()):
+        # sleep(.3)
+        if "sendtext" in str(ser.readline()) and datetime.now() > time_can_send_again :
             sendText()
+            time_can_send_again = datetime.now() + delta
+            print('SENDING THE TEXT')
 
 def sendText():
     print('sending text!')
@@ -28,7 +33,7 @@ def sendText():
     hours = datetime.now().hour
     minutes = datetime.now().minute
     if minutes < 10:
-        minutes = 0 + str(minutes) 
+        minutes = f'0{minutes}'
 
     msg = f"Critical saftey event at {hours}:{minutes}"
 
@@ -36,13 +41,13 @@ def sendText():
         message = client.messages.create(
             body=msg,
             from_='+12054984327',
-            to='+16307404172'
+            to='+15157834876'
             )
         print(message.sid)
 
     except Exception as e:
         print('error:')
-    
+
 
 if __name__ == "__main__":
     main()
