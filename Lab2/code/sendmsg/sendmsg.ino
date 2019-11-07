@@ -28,7 +28,7 @@ void loop() {
   while (1){
     val = analogRead(analogPin);  // New input
     samps++;
-    if (val > 15){
+    if (val > 180){
       spikes++;
     }
 
