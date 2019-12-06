@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import * 
+from tkinter import *
 from Preset import Preset
 
 # small preset test
@@ -11,7 +11,8 @@ from Preset import Preset
 # p.set_hour(3)
 # print(p)
 
-
+# credit: Page class and current MainView logic, however logic will change as we are using canvas to draw
+# https://stackoverflow.com/questions/14817210/using-buttons-in-tkinter-to-navigate-to-different-pages-of-the-application
 class Page(tk.Frame):
     def __init__(self, mainview, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
@@ -123,7 +124,8 @@ class MainView(tk.Frame):
     # render image w/ callback
     def renderImageWithCallback(self, fname, xloc, yloc, callback):
         self._imgs.append(PhotoImage(file=fname))
-        self._obj_ids.append(self._canvas.create_image(xloc, yloc, image=self._imgs[-1]))
+        self._obj_ids.append(
+            self._canvas.create_image(xloc, yloc, image=self._imgs[-1]))
         self._canvas.tag_bind(self._obj_ids[-1], '<Button-1>', callback)
 
     def settime(self, e1):
