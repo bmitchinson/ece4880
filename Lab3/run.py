@@ -134,7 +134,8 @@ class MainView(tk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
+    padding = 3
     main = MainView(root)
     main.pack(side="top", fill="both", expand=True)
-    root.wm_geometry('320x240+100+100')
+    root.wm_geometry(f"{root.winfo_screenwidth()-padding}x{root.winfo_screenheight()-padding}+0+0")
     root.mainloop()
