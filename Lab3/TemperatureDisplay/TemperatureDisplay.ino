@@ -15,34 +15,58 @@
 #define YM 8   // can be a digital pin
 #define XP 9   // can be a digital pin
 
+// Touch screen variables defining maximum and minum inputs to 
+// convert between touch screen and display coordinates
 #define TS_MAXX 942
 #define TS_MAXY 890 
 #define TS_MINX 122 
 #define TS_MINY 111
 
-#define LINECOLOR1 0xEBD5  
+// view min and max
+#define VIEW_MAX_X 240
+#define VIEW_MAX_Y 320
+
+//
+// #define LINECOLOR1 0xEBD5  
+
+// structs
+struct Rectangle {
+  int minX;
+  int maxX;
+  int minY;
+  int maxY;
+  unsigned int fillColor;
+};
 
 
-bool buttonPress();
 
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+// function prototypes
+void drawRectangle(Rectangle rectangle);
+bool tsPointInRectangle(TSPoint p, Rectangle rectangle);
+void drawBackground();
+
+
+// initialize global object for touch screen
+# define UNKNOWN_TOUCHSCREEN_PARAM 300
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, UNKNOWN_TOUCHSCREEN_PARAM);
 
 // Use hardware SPI (on Uno, #13, #12, #11) and the above  CS/DC
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
-volatile int x1 = 0;
-volatile int x2 = x1 + 96;
-volatile int y1 = 0;
-volatile int y2 = y1 + 96;
+Rectangle recty  = {0, 40, 0, 60, ILI9341_RED};
 
+
+// setup for program
 void setup() {
   Serial.begin(9600);
   tft.begin(); 
-  tft.fillScreen(ILI9341_BLACK);
-  tft.drawRect(x1, y1, x2, y2, LINECOLOR1);
+  tft.fillScreen(ILI9341_WHITE);
+  drawRectangle(recty);
 }
 
 
+// main loop
+bool run = false;
 void loop(void){
   TSPoint p = ts.getPoint();
   if (p.z > ts.pressureThreshhold) {
@@ -53,32 +77,61 @@ void loop(void){
      Serial.print("\tY = "); Serial.print(p.y);
      Serial.print("\tPressure = "); Serial.println(p.z);
   }
-  if(buttonPress(p)) {
+  if(tsPointInRectangle(p, recty)) {
     tft.fillScreen(ILI9341_RED);
+    run = true;
+  } else if (run) {
+    tft.fillScreen(ILI9341_WHITE);
+    drawRectangle(recty);
+    run = false;
   }
   delay(500);
 }
 
-bool buttonPress(TSPoint p) {
-  if((p.x < x2) and (p.x > x1)){
-    if((p.y < y2) and (p.y > y1)) {
+
+void drawRectangle(Rectangle rectangle) {
+  tft.fillRect(rectangle.minX, rectangle.minY, rectangle.maxX, rectangle.maxY, rectangle.fillColor);
+}
+
+void drawBackground() {
+  tft.fillScreen(ILI9341_WHITE);
+}
+
+bool tsPointInRectangle(TSPoint p, Rectangle rectangle) {
+  if((p.x < rectangle.maxX) and (p.x > rectangle.minX)){
+    if((p.y < rectangle.maxY) and (p.y > rectangle.minY)) {
       return true;
     }
   }
   return false;
 }
 
-unsigned long testFillScreen() {
-  unsigned long start = micros();
-  tft.fillScreen(ILI9341_BLACK);
-  yield();
-  tft.fillScreen(ILI9341_RED);
-  yield();
-  tft.fillScreen(ILI9341_GREEN);
-  yield();
-  tft.fillScreen(ILI9341_BLUE);
-  yield();
-  tft.fillScreen(ILI9341_BLACK);
-  yield();
-  return micros() - start;
-}
+
+// old code commented below
+
+
+// implementation of prototypes
+//bool buttonPress(TSPoint p) {
+//  if((p.x < x2) and (p.x > x1)){
+//    if((p.y < y2) and (p.y > y1)) {
+//      return true;
+//    }
+//  }
+//  return false;
+//}
+
+
+//unsigned long testFillScreen() {
+//  unsigned long start = micros();
+//  tft.fillScreen(ILI9341_BLACK);
+//  yield();
+//  tft.fillScreen(ILI9341_RED);
+//  yield();
+//  tft.fillScreen(ILI9341_GREEN);
+//  yield();
+//  tft.fillScreen(ILI9341_BLUE);
+//  yield();
+//  tft.fillScreen(ILI9341_BLACK);
+//  yield();
+//  return micros() - start;
+//}
