@@ -13,7 +13,7 @@
 #define YP A2  // must be an analog pin, use "An" notation!
 #define XM A3  // must be an analog pin, use "An" notation!
 #define YM 8   // can be a digital pin
-#define XP 9   // can be a digital pin
+#define XP 7   // can be a digital pin
 
 // Touch screen variables defining maximum and minum inputs to 
 // convert between touch screen and display coordinates
@@ -38,13 +38,10 @@ struct Rectangle {
   unsigned int fillColor;
 };
 
-
-
 // function prototypes
 void drawRectangle(Rectangle rectangle);
 bool tsPointInRectangle(TSPoint p, Rectangle rectangle);
 void drawBackground();
-
 
 // initialize global object for touch screen
 # define UNKNOWN_TOUCHSCREEN_PARAM 300
@@ -55,15 +52,13 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 Rectangle recty  = {0, 40, 0, 60, ILI9341_RED};
 
-
 // setup for program
 void setup() {
   Serial.begin(9600);
   tft.begin(); 
   tft.fillScreen(ILI9341_WHITE);
-  drawRectangle(recty);
+  // drawRectangle(recty);
 }
-
 
 // main loop
 bool run = false;
@@ -77,14 +72,14 @@ void loop(void){
      Serial.print("\tY = "); Serial.print(p.y);
      Serial.print("\tPressure = "); Serial.println(p.z);
   }
-  if(tsPointInRectangle(p, recty)) {
-    tft.fillScreen(ILI9341_RED);
-    run = true;
-  } else if (run) {
-    tft.fillScreen(ILI9341_WHITE);
-    drawRectangle(recty);
-    run = false;
-  }
+  // if(tsPointInRectangle(p, recty)) {
+  //   tft.fillScreen(ILI9341_RED);
+  //   run = true;
+  // } else if (run) {
+  //   tft.fillScreen(ILI9341_WHITE);
+  //   drawRectangle(recty);
+  //   run = false;
+  // }
   delay(500);
 }
 
