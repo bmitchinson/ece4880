@@ -1,0 +1,8 @@
+setlock  49:47
+setpre   49:120
+toghoff  49:193
+toghon   49:193
+upbutt   262:51
+downbutt 262:128
+offbar   203:193 (auto, ac, and heat)
+tempspot 155:90
