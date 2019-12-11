@@ -60,19 +60,49 @@
 
 // *****************************
 // structs
-struct Rectangle {
+class Component {
+public:
+  Component(int mx, int Mx, int my, int My, char* fname, TouchScreen* ts, Adafruit_ILI9341* tft){
+    this->minX = mx;
+    this->maxX = Mx;
+    this->minY = my;
+    this->maxY = My;
+    this->filename = fname;
+    this->tsPtr = ts;
+    this->tftPtr = tft;
+  }
+  // position data
   int minX;
   int maxX;
   int minY;
   int maxY;
-  unsigned int fillColor;
+  // pointers to global variables
+  TouchScreen* tsPtr;
+  Adafruit_ILI9341* tftPtr;
+  // iamge status
+  ImageReturnCode stat;
+  // filename to read from
+  char* filename;
+  // draw the Image
+  void render(){
+      Serial.print(F("Loading...\n"));
+      this->stat = reader.drawBMP(this->filename, *(this->tftPtr), this->minX, this->minY);
+      reader.printStatus(this->stat);
+  }
+
+  bool containsPoint(TSPoint p) {
+    if((p.x < this->maxX) and (p.x > this->minX)){
+      if((p.y < this->maxY) and (p.y > this->minY)) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
+
 // *****************************
-// function prototypes
-void drawRectangle(Rectangle rectangle);
-bool tsPointInRectangle(TSPoint p, Rectangle rectangle);
-void drawBackground();
+
 
 // *****************************
 // screen and display objects
@@ -82,7 +112,7 @@ ImageReturnCode stat; // Status from image-reading functions
 Adafruit_Image img; // An image loaded into RAM
 // int32_t width  = 0, height = 0;
 
-Rectangle recty  = {0, 40, 0, 60, ILI9341_RED};
+Component demoComponenet  = Component(0, VIEW_MAX_X, 0, VIEW_MAX_Y, "/demo.bmp", &ts, &tft);
 
 // *****************************
 // program setup
@@ -117,11 +147,11 @@ void setup() {
   // successfully communicating with the screen.
   tft.fillScreen(ILI9341_BLUE);
   tft.setRotation(1);
-  // drawRectangle(recty);
 
-  Serial.print(F("Loading demo.bmp to screen..."));
-  stat = reader.drawBMP("/demo.bmp", tft, 0, 0);
-  reader.printStatus(stat);   // How'd we do?
+  // Serial.print(F("Loading demo.bmp to screen..."));
+  // stat = reader.drawBMP("/demo.bmp", tft, 0, 0);
+  // reader.printStatus(stat);   // How'd we do?
+  demoComponenet.render();
 
   delay(1000); // Pause 1 second before moving on to loop()
 }
@@ -154,18 +184,6 @@ void loop(void){
 
 // *****************************
 // helpter function defs
-void drawRectangle(Rectangle rectangle) {
-  tft.fillRect(rectangle.minX, rectangle.minY, rectangle.maxX, rectangle.maxY, rectangle.fillColor);
-}
-void drawBackground() {
-  tft.fillScreen(ILI9341_WHITE);
-}
-bool tsPointInRectangle(TSPoint p, Rectangle rectangle) {
-  if((p.x < rectangle.maxX) and (p.x > rectangle.minX)){
-    if((p.y < rectangle.maxY) and (p.y > rectangle.minY)) {
-      return true;
-    }
-  }
-  return false;
-}
+
+
 // *****************************
