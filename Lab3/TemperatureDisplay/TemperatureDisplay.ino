@@ -1,4 +1,5 @@
-
+// *****************************
+// imports
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
@@ -8,9 +9,8 @@
 #include <Adafruit_SPIFlash.h>    // SPI / QSPI flash library
 #include <Adafruit_ImageReader.h> // Image-reading functions
 
-#define USE_SD_CARD
-
-// For the Adafruit shield, these are the default.
+// *****************************
+// defs
 #define TFT_DC 9
 #define TFT_CS 10
 #define SD_CS   4 // SD card select pin
@@ -32,6 +32,12 @@
 #define VIEW_MAX_X 240
 #define VIEW_MAX_Y 320
 
+// initialize global object for touch screen
+# define UNKNOWN_TOUCHSCREEN_PARAM 300
+
+// *****************************
+// configure sd card
+#define USE_SD_CARD
 #if defined(USE_SD_CARD)
   SdFat                SD;         // SD card filesystem
   Adafruit_ImageReader reader(SD); // Image-reader object, pass in SD filesys
@@ -52,9 +58,7 @@
   Adafruit_ImageReader reader(filesys); // Image-reader, pass in flash filesys
 #endif
 
-//
-// #define LINECOLOR1 0xEBD5  
-
+// *****************************
 // structs
 struct Rectangle {
   int minX;
@@ -64,50 +68,48 @@ struct Rectangle {
   unsigned int fillColor;
 };
 
+// *****************************
 // function prototypes
 void drawRectangle(Rectangle rectangle);
 bool tsPointInRectangle(TSPoint p, Rectangle rectangle);
 void drawBackground();
 
-// initialize global object for touch screen
-# define UNKNOWN_TOUCHSCREEN_PARAM 300
+// *****************************
+// screen and display objects
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, UNKNOWN_TOUCHSCREEN_PARAM);
-
-// Use hardware SPI (on Uno, #13, #12, #11) and the above  CS/DC
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
-
-Adafruit_Image       img;        // An image loaded into RAM
-int32_t              width  = 0, // BMP image dimensions
-                     height = 0;
+ImageReturnCode stat; // Status from image-reading functions
+Adafruit_Image img; // An image loaded into RAM
+// int32_t width  = 0, height = 0;
 
 Rectangle recty  = {0, 40, 0, 60, ILI9341_RED};
 
-// setup for program
+// *****************************
+// program setup
 void setup() {
-  ImageReturnCode stat; // Status from image-reading functions
+  // Setup serial
   Serial.begin(9600);
   #if !defined(ESP32)
-  while(!Serial);       // Wait for Serial Monitor before continuing
-#endif
+    while(!Serial);
+  #endif
+  // If the SD is messed up talk about it
   Serial.print(F("Initializing filesystem..."));
-#if defined(USE_SD_CARD)
-  // SD card is pretty straightforward, a single call...
-  if(!SD.begin(SD_CS, SD_SCK_MHZ(25))) { // ESP32 requires 25 MHz limit
-    Serial.println(F("SD begin() failed"));
-    for(;;); // Fatal error, do not continue
-  }
-#else
-  // SPI or QSPI flash requires two steps, one to access the bare flash
-  // memory itself, then the second to access the filesystem within...
-  if(!flash.begin()) {
-    Serial.println(F("flash begin() failed"));
-    for(;;);
-  }
-  if(!filesys.begin(&flash)) {
-    Serial.println(F("filesys begin() failed"));
-    for(;;);
-  }
-#endif
+  #if defined(USE_SD_CARD)
+    if(!SD.begin(SD_CS, SD_SCK_MHZ(25))) {
+      Serial.println(F("SD begin() failed"));
+      for(;;);
+    }
+  #else
+    if(!flash.begin()) {
+      Serial.println(F("flash begin() failed"));
+      for(;;);
+    }
+    if(!filesys.begin(&flash)) {
+      Serial.println(F("filesys begin() failed"));
+      for(;;);
+    }
+  #endif
+  // by this point sd is good to go
   Serial.println(F("OK!"));
 
   tft.begin(); 
@@ -117,18 +119,19 @@ void setup() {
   tft.setRotation(1);
   // drawRectangle(recty);
 
-  // Load full-screen BMP file' at position (0,0) (top left).
-  // Notice the 'reader' object performs this, with 'tft' as an argument.
   Serial.print(F("Loading demo.bmp to screen..."));
   stat = reader.drawBMP("/demo.bmp", tft, 0, 0);
   reader.printStatus(stat);   // How'd we do?
 
-  delay(1000); // Pause 2 seconds before moving on to loop()
+  delay(1000); // Pause 1 second before moving on to loop()
 }
-
-// main loop
+// *****************************
+// program loop state
 bool run = false;
+// *****************************
+// program loop
 void loop(void){
+  // get and print touch
   TSPoint p = ts.getPoint();
   if (p.z > ts.pressureThreshhold) {
      p.x = map(p.x, TS_MAXX, TS_MINX, 320, 0);
@@ -146,18 +149,17 @@ void loop(void){
   //   drawRectangle(recty);
   //   run = false;
   // }
-  delay(500);
+  delay(200);
 }
 
-
+// *****************************
+// helpter function defs
 void drawRectangle(Rectangle rectangle) {
   tft.fillRect(rectangle.minX, rectangle.minY, rectangle.maxX, rectangle.maxY, rectangle.fillColor);
 }
-
 void drawBackground() {
   tft.fillScreen(ILI9341_WHITE);
 }
-
 bool tsPointInRectangle(TSPoint p, Rectangle rectangle) {
   if((p.x < rectangle.maxX) and (p.x > rectangle.minX)){
     if((p.y < rectangle.maxY) and (p.y > rectangle.minY)) {
@@ -166,33 +168,4 @@ bool tsPointInRectangle(TSPoint p, Rectangle rectangle) {
   }
   return false;
 }
-
-
-// old code commented below
-
-
-// implementation of prototypes
-//bool buttonPress(TSPoint p) {
-//  if((p.x < x2) and (p.x > x1)){
-//    if((p.y < y2) and (p.y > y1)) {
-//      return true;
-//    }
-//  }
-//  return false;
-//}
-
-
-//unsigned long testFillScreen() {
-//  unsigned long start = micros();
-//  tft.fillScreen(ILI9341_BLACK);
-//  yield();
-//  tft.fillScreen(ILI9341_RED);
-//  yield();
-//  tft.fillScreen(ILI9341_GREEN);
-//  yield();
-//  tft.fillScreen(ILI9341_BLUE);
-//  yield();
-//  tft.fillScreen(ILI9341_BLACK);
-//  yield();
-//  return micros() - start;
-//}
+// *****************************
