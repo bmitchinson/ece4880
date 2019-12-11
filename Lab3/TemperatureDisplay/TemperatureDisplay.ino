@@ -4,10 +4,16 @@
 #include "Adafruit_ILI9341.h"
 #include <stdint.h> 
 #include "TouchScreen.h"
+#include <SdFat.h>                // SD card & FAT filesystem library
+#include <Adafruit_SPIFlash.h>    // SPI / QSPI flash library
+#include <Adafruit_ImageReader.h> // Image-reading functions
+
+#define USE_SD_CARD
 
 // For the Adafruit shield, these are the default.
 #define TFT_DC 9
 #define TFT_CS 10
+#define SD_CS   4 // SD card select pin
 
 // Touchscreen definitions
 #define YP A2  // must be an analog pin, use "An" notation!
@@ -25,6 +31,26 @@
 // view min and max
 #define VIEW_MAX_X 240
 #define VIEW_MAX_Y 320
+
+#if defined(USE_SD_CARD)
+  SdFat                SD;         // SD card filesystem
+  Adafruit_ImageReader reader(SD); // Image-reader object, pass in SD filesys
+#else
+  // SPI or QSPI flash filesystem (i.e. CIRCUITPY drive)
+  #if defined(__SAMD51__) || defined(NRF52840_XXAA)
+    Adafruit_FlashTransport_QSPI flashTransport(PIN_QSPI_SCK, PIN_QSPI_CS,
+      PIN_QSPI_IO0, PIN_QSPI_IO1, PIN_QSPI_IO2, PIN_QSPI_IO3);
+  #else
+    #if (SPI_INTERFACES_COUNT == 1)
+      Adafruit_FlashTransport_SPI flashTransport(SS, &SPI);
+    #else
+      Adafruit_FlashTransport_SPI flashTransport(SS1, &SPI1);
+    #endif
+  #endif
+  Adafruit_SPIFlash    flash(&flashTransport);
+  FatFileSystem        filesys;
+  Adafruit_ImageReader reader(filesys); // Image-reader, pass in flash filesys
+#endif
 
 //
 // #define LINECOLOR1 0xEBD5  
@@ -50,14 +76,54 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, UNKNOWN_TOUCHSCREEN_PARAM);
 // Use hardware SPI (on Uno, #13, #12, #11) and the above  CS/DC
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
+Adafruit_Image       img;        // An image loaded into RAM
+int32_t              width  = 0, // BMP image dimensions
+                     height = 0;
+
 Rectangle recty  = {0, 40, 0, 60, ILI9341_RED};
 
 // setup for program
 void setup() {
+  ImageReturnCode stat; // Status from image-reading functions
   Serial.begin(9600);
+  #if !defined(ESP32)
+  while(!Serial);       // Wait for Serial Monitor before continuing
+#endif
+  Serial.print(F("Initializing filesystem..."));
+#if defined(USE_SD_CARD)
+  // SD card is pretty straightforward, a single call...
+  if(!SD.begin(SD_CS, SD_SCK_MHZ(25))) { // ESP32 requires 25 MHz limit
+    Serial.println(F("SD begin() failed"));
+    for(;;); // Fatal error, do not continue
+  }
+#else
+  // SPI or QSPI flash requires two steps, one to access the bare flash
+  // memory itself, then the second to access the filesystem within...
+  if(!flash.begin()) {
+    Serial.println(F("flash begin() failed"));
+    for(;;);
+  }
+  if(!filesys.begin(&flash)) {
+    Serial.println(F("filesys begin() failed"));
+    for(;;);
+  }
+#endif
+  Serial.println(F("OK!"));
+
   tft.begin(); 
-  tft.fillScreen(ILI9341_WHITE);
+  // Fill screen blue. Not a required step, this just shows that we're
+  // successfully communicating with the screen.
+  tft.fillScreen(ILI9341_BLUE);
+  tft.setRotation(1);
   // drawRectangle(recty);
+
+  // Load full-screen BMP file' at position (0,0) (top left).
+  // Notice the 'reader' object performs this, with 'tft' as an argument.
+  Serial.print(F("Loading demo.bmp to screen..."));
+  stat = reader.drawBMP("/demo.bmp", tft, 0, 0);
+  reader.printStatus(stat);   // How'd we do?
+
+  delay(1000); // Pause 2 seconds before moving on to loop()
 }
 
 // main loop
