@@ -30,11 +30,16 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 // Use hardware SPI (on Uno, #13, #12, #11) and the above  CS/DC
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
+volatile int x1 = 0;
+volatile int x2 = x1 + 96;
+volatile int y1 = 0;
+volatile int y2 = y1 + 96;
+
 void setup() {
   Serial.begin(9600);
   tft.begin(); 
   tft.fillScreen(ILI9341_BLACK);
-  tft.drawRect(0, 0, 240, 320, LINECOLOR1);
+  tft.drawRect(x1, y1, x2, y2, LINECOLOR1);
 }
 
 
@@ -42,19 +47,24 @@ void loop(void){
   TSPoint p = ts.getPoint();
   if (p.z > ts.pressureThreshhold) {
      p.x = map(p.x, TS_MAXX, TS_MINX, 320, 0);
-     p.y = map(p.y, TS_MAXY, TS_MINY, 0, 480);
+     p.y = map(p.y, TS_MAXY, TS_MINY, 480, 0);
 
      Serial.print("X = "); Serial.print(p.x);
      Serial.print("\tY = "); Serial.print(p.y);
      Serial.print("\tPressure = "); Serial.println(p.z);
   }
-  if(buttonPress()) {
+  if(buttonPress(p)) {
     tft.fillScreen(ILI9341_RED);
   }
-  delay(1000);
+  delay(500);
 }
 
-bool buttonPress() {
+bool buttonPress(TSPoint p) {
+  if((p.x < x2) and (p.x > x1)){
+    if((p.y < y2) and (p.y > y1)) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -70,32 +80,5 @@ unsigned long testFillScreen() {
   yield();
   tft.fillScreen(ILI9341_BLACK);
   yield();
-  return micros() - start;
-}
-
-unsigned long testText() {
-  tft.fillScreen(ILI9341_BLACK);
-  unsigned long start = micros();
-  tft.setCursor(0, 0);
-  tft.setTextColor(ILI9341_WHITE);  tft.setTextSize(1);
-  tft.println("Hello World!");
-  tft.setTextColor(ILI9341_YELLOW); tft.setTextSize(2);
-  tft.println(1234.56);
-  tft.setTextColor(ILI9341_RED);    tft.setTextSize(3);
-  tft.println(0xDEADBEEF, HEX);
-  tft.println();
-  tft.setTextColor(ILI9341_GREEN);
-  tft.setTextSize(5);
-  tft.println("Groop");
-  tft.setTextSize(2);
-  tft.println("I implore thee,");
-  tft.setTextSize(1);
-  tft.println("my foonting turlingdromes.");
-  tft.println("And hooptiously drangle me");
-  tft.println("with crinkly bindlewurdles,");
-  tft.println("Or I will rend thee");
-  tft.println("in the gobberwarts");
-  tft.println("with my blurglecruncheon,");
-  tft.println("see if I don't!");
   return micros() - start;
 }
