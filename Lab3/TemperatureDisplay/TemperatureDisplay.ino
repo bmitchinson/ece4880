@@ -204,14 +204,29 @@ enum ScreenSetting
 };
 enum PresetSelectSetting
 {
+  ONE,
+  TWO,
+  THREE,
+  FOUR,
+};
+enum PresetSelectSetSetting
+{
   WEEKEND,
   WEEKDAY,
 };
 
+// global states
+ScreenSetting screenSetting = ScreenSetting::MAIN;
+
+// main states
 bool hold = false;
 ControlSetting controlSetting = ControlSetting::OFF;
-ScreenSetting screenSetting = ScreenSetting::MAIN;
-PresetSelectSetting presetSelectSetting = PresetSelectSetting::WEEKEND;
+
+// preset select set states
+PresetSelectSetSetting presetSelectSetSetting = PresetSelectSetSetting::WEEKEND;
+
+// preset select states
+PresetSelectSetting presetSelectSetting = PresetSelectSetting::ONE;
 
 void renderHoldButton()
 {
@@ -257,6 +272,33 @@ void renderMainScreen()
   downbutt.render();
   renderControlBar();
   tempspot.render();
+}
+
+void renderPresetSetScreen()
+{
+  tft.fillScreen(ILI9341_WHITE);
+  swchonn.render();
+  swchoff.render();
+
+  time_div.render();
+
+  tabfour.render();
+  tabthree.render();
+  tabtwo.render();
+  tabone.render();
+
+  endtitle.render();
+  daytitle.render();
+
+  pm_butt.render();
+  am_butt.render();
+
+  min_up.render();
+  min_down.render();
+  tmpleft.render();
+  tmpright.render();
+  h_up.render();
+  h_down.render();
 }
 
 void callbackMainScreen(TSPoint p)
@@ -411,7 +453,6 @@ void drawCurrentTemp() {
   tft.fillRect(30,135, 80, 75, ILI9341_WHITE);
   tft.setCursor(30, 135);
   tft.setTextColor(ILI9341_BLACK); tft.setTextSize(7);
-  // TODO replace with current temp val
   getTemp();
   tft.println(currentTemp);
 }
@@ -428,7 +469,6 @@ void drawCurrentTime(){
   tft.fillRect(45, 280, 250, 25, ILI9341_WHITE);
   tft.setCursor(45, 280);
   tft.setTextColor(ILI9341_BLACK); tft.setTextSize(2);
-  // TODO replace with current time
   DateTime now = rtc.now();
   getTemp();
   String time = String(now.month()) + "/" + String(now.day()) + "  " + String(now.hour()) + ":" + String(now.minute());
