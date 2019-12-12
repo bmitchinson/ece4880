@@ -140,18 +140,19 @@ public:
 // *****************************
 
 // *****************************
+
 // Component demoComponenet  = Component(0, 0, "/demo.bmp", &ts, &tft);
-Component setlock = Component(18, 15,0,0, "/setclock.bmp", &ts, &tft);
-Component setpre = Component(18, 88,0,0, "/setpre.bmp", &ts, &tft);
-Component toghoff = Component(18, 161,80,225, "/toghoff.bmp", &ts, &tft);
-Component toghon = Component(18, 161,80,225, "/toghon.bmp", &ts, &tft);
-Component upbutt = Component(226, 42,0,0, "/upbutt.bmp", &ts, &tft);
-Component downbutt = Component(226, 118,0,0, "/downbutt.bmp", &ts, &tft);
-Component offbar = Component(106, 174,0,0, "/offbar.bmp", &ts, &tft);
-Component autobar = Component(106, 174,0,0, "/autobar.bmp", &ts, &tft);
-Component heatbar = Component(106, 174,0,0, "/heatbar.bmp", &ts, &tft);
-Component acbar = Component(106, 174,0,0, "/acbar.bmp", &ts, &tft);
-Component tempspot = Component(99, 34,0,0, "/tempspot.bmp", &ts, &tft);
+Component setlock = Component(12, 11,74,75, "/setlock.bmp", &ts, &tft);
+Component setpre = Component(89, 11,151,75, "/setpre.bmp", &ts, &tft);
+Component toghoff = Component(166, 11,228,75, "/toghoff.bmp", &ts, &tft);
+Component toghon = Component(166, 11,228,75, "/toghon.bmp", &ts, &tft);
+Component upbutt = Component(148, 112,221,130, "/upbutt.bmp", &ts, &tft);
+Component downbutt = Component(148, 189,221,207, "/downbutt.bmp", &ts, &tft);
+Component offbar = Component(24, 226,217,305, "/offbar.bmp", &ts, &tft);
+Component autobar = Component(24, 226,217,305, "/autobar.bmp", &ts, &tft);
+Component heatbar = Component(24, 226,217,305, "/heatbar.bmp", &ts, &tft);
+Component acbar = Component(24, 226,217,305, "/acbar.bmp", &ts, &tft);
+Component tempspot = Component(17, 105,129,217, "/tempspot.bmp", &ts, &tft);
 
 
 // state
@@ -267,7 +268,7 @@ void setup()
   // Fill screen blue. Not a required step, this just shows that we're
   // successfully communicating with the screen.
   tft.fillScreen(ILI9341_WHITE);
-  tft.setRotation(1);
+  //tft.setRotation(1);
   renderMainScreen();
 
   delay(1000); // Pause 1 second before moving on to loop()
@@ -288,10 +289,12 @@ void loop(void)
     Serial.print("\tY1 = ");
     Serial.print(p.y);
     Serial.print("\t");
-    p.x = map(p.x, TS_MAXX, TS_MINX, 320, 0);
-    p.y = map(p.y, TS_MAXY, TS_MINY, 240, 0);
-//    p.x = 240 - p.x;
-//    int newx = -1 * p.y;
+    p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
+    p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
+    
+
+//    p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
+//    p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
 //    int newy = p.x;
 //    newx += 240;
 //    p.x = newx;
