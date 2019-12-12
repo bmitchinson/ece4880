@@ -8,12 +8,20 @@
 #include <SdFat.h>                // SD card & FAT filesystem library
 #include <Adafruit_SPIFlash.h>    // SPI / QSPI flash library
 #include <Adafruit_ImageReader.h> // Image-reading functions
-
+#include <OneWire.h>              // Temp Sensor Protocol
+#include <DallasTemperature.h>    // Temp Sensor Lib
+#include "RTClib.h"               // Real Time Clock Lib
 // *****************************
 // defs
 #define TFT_DC 9
 #define TFT_CS 10
 #define SD_CS 4 // SD card select pin
+
+// Temp data wire
+#define ONE_WIRE_BUS 2
+
+// RTC
+RTC_DS1307 rtc;
 
 // Touchscreen definitions
 #define YP A2 // must be an analog pin, use "An" notation!
@@ -63,6 +71,15 @@ Adafruit_ImageReader reader(filesys); // Image-reader, pass in flash filesys
 // screen and display objects
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, UNKNOWN_TOUCHSCREEN_PARAM);
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
+
+// Configure Temp Sensor:
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature. 
+DallasTemperature sensors(&oneWire);
+
+int currentTemp;
 
 // structs
 class Component
@@ -311,6 +328,17 @@ void setup()
   // by this point sd is good to go
   Serial.println(F("OK!"));
 
+  // Set Up Real Time Clock if not already set up
+  
+  if (! rtc.begin()) {
+    while (1);
+  }
+  
+  if (! rtc.isrunning()) {
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  }
+
   tft.begin();
   // Fill screen blue. Not a required step, this just shows that we're
   // successfully communicating with the screen.
@@ -368,23 +396,62 @@ void loop(void)
       break;
     }
   }
+  drawCurrentTemp();
+  drawCurrentTime();
+  drawSetTemp();
+  drawRectangle(toghoff);
   delay(1000);
 }
 
 // *****************************
 // helpter function defs
 
-void drawRectangle(Component c)
-{
-  Serial.print("cmin = (");
-  Serial.print(c.minX);
-  Serial.print(",");
-  Serial.print(c.minY);
-  Serial.print(") cmax = ");
-  Serial.print(c.maxX);
-  Serial.print(",");
-  Serial.print(c.maxY);
-  Serial.print(")\n");
-  tft.drawRect(c.minX, c.minY, c.maxX - c.minX, c.maxY - c.minY, ILI9341_RED);
+void drawCurrentTemp() {
+  // clear the field
+  tft.fillRect(30,135, 80, 75, ILI9341_WHITE);
+  tft.setCursor(30, 135);
+  tft.setTextColor(ILI9341_BLACK); tft.setTextSize(7);
+  // TODO replace with current temp val
+  getTemp();
+  tft.println(currentTemp);
 }
+
+void drawSetTemp(){
+  tft.setCursor(157, 144);
+  tft.setTextColor(ILI9341_BLACK); tft.setTextSize(5);
+  // TODO replace with current set val
+  tft.println("68");
+}
+
+void drawCurrentTime(){
+  // clear the field
+  tft.fillRect(45, 280, 250, 25, ILI9341_WHITE);
+  tft.setCursor(45, 280);
+  tft.setTextColor(ILI9341_BLACK); tft.setTextSize(2);
+  // TODO replace with current time
+  DateTime now = rtc.now();
+  getTemp();
+  String time = String(now.month()) + "/" + String(now.day()) + "  " + String(now.hour()) + ":" + String(now.minute());
+  tft.println(time);
+}
+
+void drawRectangle(Component c) {
+    Serial.print("cmin = (");
+    Serial.print(c.minX);
+    Serial.print(",");
+    Serial.print(c.minY);
+    Serial.print(") cmax = ");
+    Serial.print(c.maxX);
+    Serial.print(",");
+    Serial.print(c.maxY);
+    Serial.print(")\n");
+  tft.drawRect(c.minX, c.minY, c.maxX-c.minX, c.maxY-c.minY, ILI9341_RED);
+}
+
+// Temp Sensor Helper
+void getTemp(){
+  sensors.requestTemperatures(); // Send the command to get temperatures  
+  currentTemp = (sensors.getTempCByIndex(0) * 1.8) + 32;
+}
+
 // *****************************
