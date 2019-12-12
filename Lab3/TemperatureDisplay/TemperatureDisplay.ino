@@ -126,17 +126,6 @@ public:
   }
 };
 
-//class Screen {
-//public:
-//  // constructor
-//  Screen(Component* components, int num_components, TouchScreen* ts, Adafruit_ILI9341* tft) : NUM_COMPONENTS{num_components}{
-//    this->components = componenets;
-//  }
-//  // state
-//  const int NUM_COMPONENTS;
-//  Component* components;
-//};
-
 // *****************************
 
 // *****************************
@@ -216,13 +205,24 @@ void renderMainScreen(){
 }
 
 void callbackMainScreen(TSPoint p){
-  Serial.print("callback\n");
-
   if (toghoff.containsPoint(p)){
       Serial.print("contained\n");
 
       hold = !hold;
       renderHoldButton();
+  }
+  if (offbar.containsPoint(p)){
+    int lenOfSubBox = (offbar.maxX - offbar.minX) / 4;
+    if(p.x < offbar.minX + (1*lenOfSubBox)){
+      controlSetting = ControlSetting::HEAT;
+    } else if(p.x < offbar.minX + (2*lenOfSubBox)){
+      controlSetting = ControlSetting::AC;
+    } else if (p.x < offbar.minX + (3*lenOfSubBox)){
+      controlSetting = ControlSetting::AUTO;
+    } else {
+      controlSetting = ControlSetting::OFF;
+    }
+    renderControlBar()
   }
 }
 
