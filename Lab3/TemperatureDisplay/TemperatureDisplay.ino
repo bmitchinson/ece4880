@@ -441,7 +441,6 @@ void callbackMainScreen(TSPoint p)
       maxed_out = true;
       setTemp = MAX_SET_TEMP;
     }
-    clearArea(upbutt.minX, upbutt.maxY + 3, upbutt.maxX-upbutt.minX, downbutt.minY-upbutt.maxY-6);
     drawSetTemp();
     if (maxed_out){
       drawRectangle(upbutt);
@@ -459,7 +458,6 @@ void callbackMainScreen(TSPoint p)
       mined_out=true;
       setTemp = MIN_SET_TEMP;
     }
-    clearArea(upbutt.minX, upbutt.maxY + 3, upbutt.maxX-upbutt.minX, downbutt.minY-upbutt.maxY-6);
     drawSetTemp();
     if (mined_out){
       drawRectangle(downbutt);
@@ -612,6 +610,7 @@ void setup()
 // *****************************
 
 // program loop
+bool reDrawSetTemp = true;
 void loop(void)
 {
   // get and print touch
@@ -654,13 +653,18 @@ void loop(void)
   // if on main draw this text
   if (screenSetting == ScreenSetting::MAIN)
   {
+    getTemp();
     if (pastTemp != currentTemp){
       drawCurrentTemp();
     }
+    if (reDrawSetTemp){
+      drawSetTemp();
+      reDrawSetTemp = false;
+    }
     drawCurrentTime();
-    drawSetTemp();
-  }else{
+  } else {
     pastTemp = 0;
+    reDrawSetTemp = true;
   }
   delay(1000);
 }
@@ -682,7 +686,7 @@ void clearArea(int xStart, int yStart, int width, int height)
 void drawCurrentTemp()
 {
   // clear the field
-  clearArea(30, 135, 80, 75);
+  clearArea(tempspot.minX + 2, tempspot.minY + 2, tempspot.maxX - tempspot.minX - 4, tempspot.maxY - tempspot.minY - 4);
   drawTextSetup(30, 135, 7);
   getTemp();
   tft.println(currentTemp);
@@ -690,9 +694,8 @@ void drawCurrentTemp()
 
 void drawSetTemp()
 {
-  // TODO: clearArea(XX, YY, WW, ZZ);
+  clearArea(upbutt.minX, upbutt.maxY + 3, upbutt.maxX-upbutt.minX, downbutt.minY-upbutt.maxY-6);
   drawTextSetup(157, 144, 5);
-  // TODO replace with current set val
   tft.println(setTemp);
 }
 
@@ -702,7 +705,6 @@ void drawCurrentTime()
   clearArea(45, 280, 250, 25);
   drawTextSetup(45, 280, 2);
   DateTime now = rtc.now();
-  getTemp();
   String time = String(now.month()) + "/" + String(now.day()) + "  " + String(now.hour()) + ":" + String(now.minute());
   tft.println(time);
 }
