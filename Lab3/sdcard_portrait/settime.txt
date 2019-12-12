@@ -1,0 +1,16 @@
+compname - x:y (upper left) - x:y (lower right)
+
+dayleft - 21:199 - 39:248
+dayright - 201:199 - 219:248
+stimediv - 0:71 - 240:183
+
+t_pm_but - 182:110 - 232:143
+t_am_but - 182:110 - 232:143
+
+t_min_up - 102:81 - 175:99
+t_min_dn - 102:153 - 175:171
+t_hr_up - 14:81 - 87:99
+t_hr_dn - 14:153 - 87:171
+t_sv_but - 136:278 - 201:311
+t_bc_but - 42:278 - 107:311
+setclock - 64:21 - 177:59
