@@ -405,27 +405,50 @@ void renderClockMinute() {
     clearArea(t_min_up.minX, t_min_up.maxY + 3, t_min_up.maxX - t_min_up.minX, t_min_dn.minY - t_min_up.maxY - 6);
     drawTextSetup(((int) (t_min_up.maxX - t_min_up.minX) / 5) + t_min_up.minX,
                   ((int) (t_min_dn.minY - t_min_up.maxY) / 5) + t_min_up.maxY, 4);
-    if (preClock->getMinute() < 10) {
+    if (preClock.getMinute() < 10) {
         tft.print(0);
     }
-    tft.println(preClock->getMinute());
+    tft.println(preClock.getMinute());
 }
 
 void renderClockHour() {
     clearArea(t_hr_up.minX, t_hr_up.maxY + 3, t_hr_up.maxX - t_hr_up.minX, t_hr_dn.minY - t_hr_up.maxY - 6);
     drawTextSetup(((int) (t_hr_up.maxX - t_hr_up.minX) / 5) + t_hr_up.minX,
                   ((int) (t_hr_dn.minY - t_hr_up.maxY) / 5) + t_hr_up.maxY, 4);
-    if (preClock->getHour() < 10) {
+    if (preClock.getHour() < 10) {
         tft.print(0);
     }
-    tft.println(preClock->getHour());
+    tft.println(preClock.getHour());
 }
 
 void renderClockDay() {
     clearArea(dayleft.maxX + 3, dayleft.minY, dayright.minX - dayleft.maxX - 6, dayleft.maxY - dayleft.minY);
     drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 6) + dayleft.maxX,
                   ((int) (dayright.maxY - dayright.minY) / 4) + dayright.minY, 4);
-    tft.println(DaysOfWeek::ToString(preClock->getDay()));
+    switch (preClock.getDay()) {
+        case Days::MONDAY:
+            tft.println("MONDAY");
+            break;
+        case Days::TUESDAY:
+            tft.println("TUESDAY");
+            break;
+        case Days::WEDNESDAY:
+            tft.println("WEDNESDAY");
+            break;
+        case Days::THURSDAY:
+            tft.println("THURSDAY");
+            break;
+        case Days::FRIDAY:
+            tft.println("FRIDAY");
+            break;
+        case Days::SATURDAY:
+            tft.println("SATURDAY");
+            break;
+        case Days::SUNDAY:
+            tft.println("SUNDAY");
+            break;
+
+    }
 }
 
 void renderClockSetScreen() {

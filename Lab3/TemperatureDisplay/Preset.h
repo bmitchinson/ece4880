@@ -16,16 +16,16 @@ public:
         this->m_isAm = isAm;
         this->m_isWeekday = isWeekday;
         this->m_temp = temp;
-        this->m_day = DaysOfWeek::Days::FRIDAY;
+        this->m_day = Days::FRIDAY;
     }
 
     // set and get day of the week
-    void setDay(DaysOfWeek::Days day) {
+    void setDay(Days day) {
         this->m_day = day;
     }
 
-    DaysOfWeek::Days getDay() {
-        return this->m_day
+    Days getDay() {
+        return this->m_day;
     }
 
     // increment/decrement
@@ -164,7 +164,7 @@ private:
     int m_temp;
 
     // day of week for setting the time
-    DaysOfWeek::Days m_day;
+    Days m_day;
 };
 
 #endif //TEMPERATUREDISPLAY_PRESET_H
