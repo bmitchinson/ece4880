@@ -16,6 +16,44 @@ public:
         this->m_temp = temp;
     }
 
+    // increment/decrement
+    void incHour() {
+        this->m_hour += 1;
+        if (this->m_hour > 12) {
+            this->m_hour = 1;
+        }
+        if (this->m_hour == 12) {
+            this->m_isAm = !this->m_isAm;
+        }
+    }
+
+    void decHour() {
+        this->m_hour -= 1;
+        if (this->m_hour < 1) {
+            this->m_hour = 12;
+        }
+        if (this->m_hour == 11) {
+            this->m_isAm = !this->m_isAm;
+        }
+    }
+
+    void incMinute() {
+        this->m_minute += 15;
+        if (this->m_minute > 45) {
+            this->m_minute = 0;
+            this->incHour();
+        }
+    }
+
+    void decMinute() {
+        this->m_minute -= 15;
+        if (this->m_minute < 0) {
+            this->m_minute = 45;
+            this->decHour();
+        }
+    }
+
+    // time manip
     int getHour() {
         return this->m_hour;
     }
@@ -36,7 +74,28 @@ public:
         }
     }
 
+    // day/end manip
+    bool isWeekday() {
+        return this->m_isWeekday;
+    }
+
+    bool isWeekend() {
+        return !this->m_isWeekday;
+    }
+
+    void setWeekday() {
+        this->m_isWeekday = true;
+    }
+
+    void setWeekend() {
+        this->m_isWeekday = false;
+    }
+
     // am/pm manip
+    void toggleAmPm() {
+        this->m_isAm = !this->m_isAm;
+    }
+
     bool isAm() {
         return this->m_isAm;
     }
@@ -54,6 +113,11 @@ public:
     }
 
     // active manip
+    void toggleActive() {
+        this->m_isActive = !this->m_isActive;
+
+    }
+
     bool isActive() {
         return this->m_isActive;
     }
@@ -64,6 +128,15 @@ public:
 
     void setInactive() {
         this->m_isActive = false;
+    }
+
+    // temp manip
+    int getTemp() {
+        return this->m_temp;
+    }
+
+    int setTemp(int t) {
+        this->m_temp = t;
     }
 
 

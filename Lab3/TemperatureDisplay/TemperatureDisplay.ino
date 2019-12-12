@@ -13,6 +13,13 @@
 #include "RTClib.h"               // Real Time Clock Lib
 // *****************************
 
+// TODO
+// -- store presets in EEPROM -> Zain
+// -- preset setting --> Alex -- DONE
+// -- preset storing --> Zain
+// -- clock setting --> Alex
+// -- clock storing --> Zain
+// -- LED functionality --> Zain
 
 // *****************************
 // global constants
@@ -136,8 +143,8 @@ Component tabfour = Component(0, 290, 240, 320, "tabfour.bmp", &ts, &tft);
 Component tabthree = Component(0, 290, 240, 320, "tabthree.bmp", &ts, &tft);
 Component tabtwo = Component(0, 290, 240, 320, "tabtwo.bmp", &ts, &tft);
 Component tabone = Component(0, 290, 240, 320, "tabone.bmp", &ts, &tft);
-Component endtitle = Component(58, 20, 187, 41, "endtitle.bmp", &ts, &tft);
-Component daytitle = Component(58, 20, 187, 41, "daytitle.bmp", &ts, &tft);
+Component endtitle = Component(88, 20, 217, 41, "endtitle.bmp", &ts, &tft);
+Component daytitle = Component(88, 20, 217, 41, "daytitle.bmp", &ts, &tft);
 Component pm_butt = Component(180, 94, 230, 127, "pm_butt.bmp", &ts, &tft);
 Component am_butt = Component(180, 94, 230, 127, "am_butt.bmp", &ts, &tft);
 Component min_up = Component(99, 63, 172, 81, "min_up.bmp", &ts, &tft);
@@ -146,6 +153,8 @@ Component tmpleft = Component(11, 189, 29, 262, "tmpleft.bmp", &ts, &tft);
 Component tmpright = Component(111, 189, 129, 262, "tmpright.bmp", &ts, &tft);
 Component h_up = Component(11, 63, 84, 81, "h_up.bmp", &ts, &tft);
 Component h_down = Component(11, 135, 84, 153, "h_down.bmp", &ts, &tft);
+Component set_preset_back_button = Component(0, 10, 65, 43, "t_bc_but.bmp", &ts, &tft);
+
 
 // main
 Component setlock = Component(12, 11, 74, 75, "/setlock.bmp", &ts, &tft);
@@ -161,30 +170,46 @@ Component acbar = Component(24, 226, 217, 305, "/acbar.bmp", &ts, &tft);
 Component tempspot = Component(17, 105, 129, 217, "/tempspot.bmp", &ts, &tft);
 // *****************************
 
+// *****************************
+// list of all state that will need to be stored in EEPROM
+Preset preEnd1 = Preset(12, 0, true, false, 72);
+Preset preEnd2 = Preset(12, 0, true, false, 72);
+Preset preEnd3 = Preset(12, 0, true, false, 72);
+Preset preEnd4 = Preset(12, 0, true, false, 72);
+Preset preDay1 = Preset(12, 0, true, true, 72);
+Preset preDay2 = Preset(12, 0, true, true, 72);
+Preset preDay3 = Preset(12, 0, true, true, 72);
+Preset preDay4 = Preset(12, 0, true, true, 72);
+// *****************************
+
 
 
 // *****************************
 // all screen state variables
-// TODO: add Preset objects here
 // global variables
 ScreenSetting screenSetting = ScreenSetting::MAIN;
 
 // main screen variables
 ControlSetting controlSetting = ControlSetting::OFF;
+bool hold = false;
 
 // clock set screen variables
+bool timeIsAm = true;
 
 // preset select set screen variables
 PresetSelectSetSetting presetSelectSetSetting = PresetSelectSetSetting::WEEKEND;
 
 // preset set screen variables
-PresetTabSelectSetting presetSelectSetting = PresetTabSelectSetting::ONE;
+PresetTabSelectSetting presetTabSelectSetting = PresetTabSelectSetting::ONE;
+bool presetActive = true;
+bool presetIsAm = true;
+Preset *activePreset;
+// *****************************
 
+
+// *****************************
 // RENDERING functions
-// MAIN MODE
-// main states
-bool hold = false;
-
+// MAIN MODE -- DONE
 void renderHoldButton() {
     if (hold) {
         toghon.render();
@@ -224,8 +249,8 @@ void renderMainScreen() {
     tempspot.render();
 }
 
-// preset select set states
-// PRESET SELECT SET
+
+// PRESET SELECT SET -- DONE
 void renderPresetSelectSetScreen() {
     tft.fillScreen(ILI9341_WHITE);
     pretitle.render();
@@ -235,13 +260,8 @@ void renderPresetSelectSetScreen() {
 }
 
 // PRESET SET MODE
-/////////////////////////////////////////////////
-// preset select states
-bool presetActive = true;
-bool presetIsAm = true;
-
-void renderPresetActiveSwitch() {
-    if (presetActive) {
+void renderActivePresetActiveSwitch() {
+    if (activePreset->isActive()) {
         swchon.render();
     } else {
         swchoff.render();
@@ -249,7 +269,7 @@ void renderPresetActiveSwitch() {
 }
 
 void renderPresetTabs() {
-    switch (presetSelectSetting) {
+    switch (presetTabSelectSetting) {
         case PresetTabSelectSetting::ONE:
             tabone.render();
             break;
@@ -265,13 +285,6 @@ void renderPresetTabs() {
     }
 }
 
-void renderPresetAmPm() {
-    if (presetIsAm) {
-        am_butt.render();
-    } else {
-        pm_butt.render();
-    }
-}
 
 void renderWeekDayWeekendTitle() {
     if (presetSelectSetSetting == PresetSelectSetSetting::WEEKDAY) {
@@ -281,12 +294,96 @@ void renderWeekDayWeekendTitle() {
     }
 }
 
+void setActivePreset() {
+    switch (presetSelectSetSetting) {
+        case PresetSelectSetSetting::WEEKEND:
+            switch (presetTabSelectSetting) {
+                case PresetTabSelectSetting::ONE:
+                    activePreset = &preEnd1;
+                    break;
+                case PresetTabSelectSetting::TWO:
+                    activePreset = &preEnd2;
+                    break;
+                case PresetTabSelectSetting::THREE:
+                    activePreset = &preEnd3;
+                    break;
+                case PresetTabSelectSetting::FOUR:
+                    activePreset = &preEnd4;
+                    break;
+            }
+            break;
+        case PresetSelectSetSetting::WEEKDAY:
+            switch (presetTabSelectSetting) {
+                case PresetTabSelectSetting::ONE:
+                    activePreset = &preDay1;
+                    break;
+                case PresetTabSelectSetting::TWO:
+                    activePreset = &preDay2;
+                    break;
+                case PresetTabSelectSetting::THREE:
+                    activePreset = &preDay3;
+                    break;
+                case PresetTabSelectSetting::FOUR:
+                    activePreset = &preDay4;
+                    break;
+            }
+            break;
+    }
+}
+
+void renderActivePresetMinute() {
+    clearArea(min_up.minX, min_up.maxY + 3, min_up.maxX - min_up.minX, min_down.minY - min_up.maxY - 6);
+    drawTextSetup(((int) (min_up.maxX - min_up.minX) / 5) + min_up.minX,
+                  ((int) (min_down.minY - min_up.maxY) / 5) + min_up.maxY, 4);
+    if (activePreset->getMinute() < 10) {
+        tft.print(0);
+    }
+    tft.println(activePreset->getMinute());
+}
+
+void renderActivePresetHour() {
+    clearArea(h_up.minX, h_up.maxY + 3, h_up.maxX - h_up.minX, h_down.minY - h_up.maxY - 6);
+    drawTextSetup(((int) (h_up.maxX - h_up.minX) / 5) + h_up.minX,
+                  ((int) (h_down.minY - h_up.maxY) / 5) + h_up.maxY, 4);
+    if (activePreset->getHour() < 10) {
+        tft.print(0);
+    }
+    tft.println(activePreset->getHour());
+}
+
+void renderActivePresetAmPm() {
+    if (activePreset->isAm()) {
+        am_butt.render();
+    } else {
+        pm_butt.render();
+    }
+}
+
+void renderActivePresetTemp() {
+    clearArea(tmpleft.maxX + 3, tmpleft.minY, tmpright.minX - tmpleft.maxX - 6, tmpleft.maxY - tmpleft.minY);
+    drawTextSetup(((int) (tmpright.minX - tmpleft.maxX) / 5) + tmpleft.maxX,
+                  ((int) (tmpright.maxY - tmpright.minY) / 4) + tmpright.minY, 4);
+    tft.println(activePreset->getTemp());
+}
+
+void renderActivePreset() {
+    setActivePreset();
+    renderActivePresetTime();
+    renderActivePresetActiveSwitch();
+    renderActivePresetTemp();
+}
+
+void renderActivePresetTime() {
+    renderActivePresetAmPm();
+    renderActivePresetHour();
+    renderActivePresetMinute();
+}
+
 void renderPresetSetScreen() {
     tft.fillScreen(ILI9341_WHITE);
-    renderPresetActiveSwitch();
+    set_preset_back_button.render();
     renderPresetTabs();
     time_div.render();
-    renderPresetAmPm();
     renderWeekDayWeekendTitle();
     min_up.render();
     min_down.render();
@@ -294,12 +391,10 @@ void renderPresetSetScreen() {
     tmpright.render();
     h_up.render();
     h_down.render();
+    renderActivePreset();
 }
 
 // SET CLOCK RENDERING
-// set clock states
-bool timeIsAm = true;
-
 void renderTimeAmPm() {
     if (timeIsAm) {
         t_am_but.render();
@@ -314,7 +409,6 @@ void renderClockSetScreen() {
     dayright.render();
     stimediv.render();
     renderTimeAmPm();
-
     t_min_up.render();
     t_min_dn.render();
     t_hr_up.render();
@@ -323,11 +417,12 @@ void renderClockSetScreen() {
     t_bc_but.render();
     setclock.render();
 }
+// *****************************
 
+
+// *****************************
 // CALLBACKS
-// /////////
-
-// MAIN
+// MAIN -- DONE
 bool maxed_out = false;
 bool mined_out = false;
 
@@ -363,13 +458,13 @@ void callbackMainScreen(TSPoint p) {
         }
     }
 
-    // toggle hold
-    if (toghoff.containsPoint(p)) {
+        // toggle hold
+    else if (toghoff.containsPoint(p)) {
         hold = !hold;
         renderHoldButton();
     }
-    // toggle contorl bar
-    if (offbar.containsPoint(p)) {
+        // toggle contorl bar
+    else if (offbar.containsPoint(p)) {
         int lenOfSubBox = (offbar.maxX - offbar.minX) / 4;
         if (p.x < offbar.minX + (1 * lenOfSubBox)) {
             controlSetting = ControlSetting::HEAT;
@@ -382,48 +477,114 @@ void callbackMainScreen(TSPoint p) {
         }
         renderControlBar();
     }
-    // Cross page navigation
-    if (setlock.containsPoint(p)) {
+        // Cross page navigation
+    else if (setlock.containsPoint(p)) {
+        Serial.println('to cs');
         screenSetting = ScreenSetting::CLOCK_SET;
         renderClockSetScreen();
     } else if (setpre.containsPoint(p)) {
+        Serial.println('to pss');
         screenSetting = ScreenSetting::PRESET_SELECT_SET;
         renderPresetSelectSetScreen();
     }
 }
 
-// PRESET SELECT SET
+// PRESET SELECT SET -- DONE
 void callbackPresetSelectSet(TSPoint p) {
     // only cross page navigation
     if (endbutt.containsPoint(p)) {
         presetSelectSetSetting = PresetSelectSetSetting::WEEKEND;
+        screenSetting = ScreenSetting::PRESET_SET;
         renderPresetSetScreen();
     } else if (daybutt.containsPoint(p)) {
         presetSelectSetSetting = PresetSelectSetSetting::WEEKDAY;
+        screenSetting = ScreenSetting::PRESET_SET;
         renderPresetSetScreen();
     } else if (backbutt.containsPoint(p)) {
+        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     }
 }
 
+// CLOCK SET
 void callbackClockSet(TSPoint p) {
     // TODO: add time manipulation callbacks
 
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
-        // TODO: save new clock state
+        // TODO: save new clock state to EEPORM
+        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     } else if (t_bc_but.containsPoint(p)) {
+        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     }
 }
 
+// PRESET SET -- DONE
 void callbackPresetSet(TSPoint p) {
-    // TODO: implement preset set callback
+    if (min_down.containsPoint(p)) {
+        activePreset->decMinute();
+        renderActivePresetTime();
+    } else if (min_up.containsPoint(p)) {
+        activePreset->incMinute();
+        renderActivePresetTime();
+    } else if (h_down.containsPoint(p)) {
+        activePreset->decHour();
+        renderActivePresetTime();
+    } else if (h_up.containsPoint(p)) {
+        activePreset->incHour();
+        renderActivePresetTime();
+    } else if (am_butt.containsPoint(p)) {
+        activePreset->toggleAmPm();
+        renderActivePresetTime();
+    } else if (swchon.containsPoint(p)) {
+        activePreset->toggleActive();
+        renderActivePresetActiveSwitch();
+    } else if (tmpright.containsPoint(p)) {
+        int tmp = activePreset->getTemp();
+        tmp += 1;
+        if (tmp > MAX_SET_TEMP) {
+            tmp = MAX_SET_TEMP;
+        }
+        activePreset->setTemp(tmp);
+        renderActivePresetTemp();
+    } else if (tmpleft.containsPoint(p)) {
+        int tmp = activePreset->getTemp();
+        tmp -= 1;
+        if (tmp < MIN_SET_TEMP) {
+            tmp = MIN_SET_TEMP;
+        }
+        activePreset->setTemp(tmp);
+        renderActivePresetTemp();
+    } else if (tabone.containsPoint(p)) {
+        int lenOfSubBox = (tabone.maxX - tabone.minX) / 4;
+        if (p.x < tabone.minX + (1 * lenOfSubBox)) {
+            presetTabSelectSetting = PresetTabSelectSetting::ONE;
+            tabone.render();
+        } else if (p.x < tabone.minX + (2 * lenOfSubBox)) {
+            presetTabSelectSetting = PresetTabSelectSetting::TWO;
+            tabtwo.render();
+        } else if (p.x < tabone.minX + (3 * lenOfSubBox)) {
+            presetTabSelectSetting = PresetTabSelectSetting::THREE;
+            tabthree.render();
+        } else {
+            presetTabSelectSetting = PresetTabSelectSetting::FOUR;
+            tabfour.render();
+        }
+        setActivePreset();
+        renderActivePreset();
+    } else if (set_preset_back_button.containsPoint(p)) {
+        screenSetting = ScreenSetting::PRESET_SELECT_SET;
+        renderPresetSelectSetScreen();
+        // TODO: store presets in EEPROM
+    }
 }
+// *****************************
+
 
 // *****************************
 // program setup
@@ -472,12 +633,14 @@ void setup() {
     tft.begin();
     // initial rendering
     renderMainScreen();
+    //renderPresetSetScreen();
     // renderPresetSelectSetScreen();
     delay(1000); // Pause 1 second before moving on to loop()
 }
-
 // *****************************
 
+
+// *****************************
 // program loop
 bool reDrawSetTemp = true;
 
@@ -501,18 +664,26 @@ void loop(void) {
         Serial.println(p.z);
 
         // call the callback function neccesary to handle the touch
+        Serial.println(screenSetting);
+
         switch (screenSetting) {
             case ScreenSetting::MAIN:
                 callbackMainScreen(p);
+                Serial.println('m');
                 break;
             case ScreenSetting::PRESET_SELECT_SET:
                 callbackPresetSelectSet(p);
+                Serial.println('pss');
                 break;
             case ScreenSetting::PRESET_SET:
                 callbackPresetSet(p);
+                Serial.println('ps');
+
                 break;
             case ScreenSetting::CLOCK_SET:
                 callbackClockSet(p);
+                Serial.println('cs');
+
                 break;
         }
     }
@@ -534,6 +705,8 @@ void loop(void) {
     }
     delay(1000);
 }
+// *****************************
+
 
 // *****************************
 // helper function defs
@@ -585,5 +758,4 @@ void getTemp() {
         currentTemp = MAX_SET_TEMP;
     }
 }
-
 // *****************************
