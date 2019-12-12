@@ -107,7 +107,7 @@ public:
     Serial.print(",");
     Serial.print(this->maxY);
     Serial.print("\n");
-    
+
     Serial.print(F("..DONE"));
     this->stat = reader.drawBMP(this->filename, *(this->tftPtr), this->minX, this->minY);
     reader.printStatus(this->stat);
@@ -129,71 +129,109 @@ public:
 // *****************************
 
 // *****************************
+// LIST OUT ALL COMPONENTS
+// ///////////////////////
 
-// Component demoComponenet  = Component(0, 0, "/demo.bmp", &ts, &tft);
-Component setlock = Component(12, 11,74,75, "/setlock.bmp", &ts, &tft);
-Component setpre = Component(89, 11,151,75, "/setpre.bmp", &ts, &tft);
-Component toghoff = Component(166, 11,228,75, "/toghoff.bmp", &ts, &tft);
-Component toghon = Component(166, 11,228,75, "/toghon.bmp", &ts, &tft);
-Component upbutt = Component(148, 112,221,130, "/upbutt.bmp", &ts, &tft);
-Component downbutt = Component(148, 189,221,207, "/downbutt.bmp", &ts, &tft);
-Component offbar = Component(24, 226,217,305, "/offbar.bmp", &ts, &tft);
-Component autobar = Component(24, 226,217,305, "/autobar.bmp", &ts, &tft);
-Component heatbar = Component(24, 226,217,305, "/heatbar.bmp", &ts, &tft);
-Component acbar = Component(24, 226,217,305, "/acbar.bmp", &ts, &tft);
-Component tempspot = Component(17, 105,129,217, "/tempspot.bmp", &ts, &tft);
+// set preset
+Component swchoff = Component(149, 214, 225, 242, "swchoff.bmp", &ts, &tft);
+Component swchonn = Component(149, 214, 225, 242, "swchonn.bmp", &ts, &tft);
 
+Component time_div = Component(0, 52, 240, 164, "time_div.bmp", &ts, &tft);
+
+Component tabfour = Component(0, 290, 240, 320, "tabfour.bmp", &ts, &tft);
+Component tabthree = Component(0, 290, 240, 320, "tabthree.bmp", &ts, &tft);
+Component tabtwo = Component(0, 290, 240, 320, "tabtwo.bmp", &ts, &tft);
+Component tabone = Component(0, 290, 240, 320, "tabone.bmp", &ts, &tft);
+
+Component endtitle = Component(58, 20, 187, 41, "endtitle.bmp", &ts, &tft);
+Component daytitle = Component(58, 20, 187, 41, "daytitle.bmp", &ts, &tft);
+
+Component pm_butt = Component(180, 94, 230, 127, "pm_butt.bmp", &ts, &tft);
+Component am_butt = Component(180, 94, 230, 127, "am_butt.bmp", &ts, &tft);
+
+Component min_up = Component(99, 63, 172, 81, "min_up.bmp", &ts, &tft);
+Component min_down = Component(99, 135, 172, 153, "min_down.bmp", &ts, &tft);
+Component tmpleft = Component(11, 189, 29, 262, "tmpleft.bmp", &ts, &tft);
+Component tmpright = Component(111, 189, 129, 262, "tmpright.bmp", &ts, &tft);
+Component h_up = Component(11, 63, 84, 81, "h_up.bmp", &ts, &tft);
+Component h_down = Component(11, 135, 84, 153, "h_down.bmp", &ts, &tft);
+
+// main
+Component setlock = Component(12, 11, 74, 75, "/setlock.bmp", &ts, &tft);
+Component setpre = Component(89, 11, 151, 75, "/setpre.bmp", &ts, &tft);
+Component toghoff = Component(166, 11, 228, 75, "/toghoff.bmp", &ts, &tft);
+Component toghon = Component(166, 11, 228, 75, "/toghon.bmp", &ts, &tft);
+Component upbutt = Component(148, 112, 221, 130, "/upbutt.bmp", &ts, &tft);
+Component downbutt = Component(148, 189, 221, 207, "/downbutt.bmp", &ts, &tft);
+Component offbar = Component(24, 226, 217, 305, "/offbar.bmp", &ts, &tft);
+Component autobar = Component(24, 226, 217, 305, "/autobar.bmp", &ts, &tft);
+Component heatbar = Component(24, 226, 217, 305, "/heatbar.bmp", &ts, &tft);
+Component acbar = Component(24, 226, 217, 305, "/acbar.bmp", &ts, &tft);
+Component tempspot = Component(17, 105, 129, 217, "/tempspot.bmp", &ts, &tft);
 
 // state
-enum ControlSetting {
+enum ControlSetting
+{
   OFF,
   AUTO,
   HEAT,
   ON
 };
 
-enum ScreenSetting {
+enum ScreenSetting
+{
   MAIN,
   PRESET_SELECT_SET,
   PRESET_SET,
   CLOCK_SET
 };
+enum PresetSelectSetting
+{
+  WEEKEND,
+  WEEKDAY,
+};
 
 bool hold = false;
 ControlSetting controlSetting = ControlSetting::OFF;
 ScreenSetting screenSetting = ScreenSetting::MAIN;
+PresetSelectSetting presetSelectSetting = PresetSelectSetting::WEEKEND;
 
-void renderHoldButton() {
-  if (hold) {
+void renderHoldButton()
+{
+  if (hold)
+  {
     toghon.render();
   }
-  else {
+  else
+  {
     toghoff.render();
   }
 }
 
+void renderControlBar()
+{
+  switch (controlSetting)
+  {
+  case ControlSetting::OFF:
+    offbar.render();
+    break;
 
-void renderControlBar() {
-  switch (controlSetting){
-    case ControlSetting::OFF:
-        offbar.render();
-        break;
+  case ControlSetting::AUTO:
+    autobar.render();
+    break;
 
-    case ControlSetting::AUTO:
-        autobar.render();
-        break;
+  case ControlSetting::HEAT:
+    heatbar.render();
+    break;
 
-    case ControlSetting::HEAT:
-        heatbar.render();
-        break;
-
-    case ControlSetting::ON:
-        acbar.render();
-        break;
+  case ControlSetting::ON:
+    acbar.render();
+    break;
   }
 }
 
-void renderMainScreen(){
+void renderMainScreen()
+{
   tft.fillScreen(ILI9341_WHITE);
   setlock.render();
   setpre.render();
@@ -204,28 +242,37 @@ void renderMainScreen(){
   tempspot.render();
 }
 
-void callbackMainScreen(TSPoint p){
-  if (toghoff.containsPoint(p)){
-      Serial.print("contained\n");
+void callbackMainScreen(TSPoint p)
+{
+  if (toghoff.containsPoint(p))
+  {
+    Serial.print("contained\n");
 
-      hold = !hold;
-      renderHoldButton();
+    hold = !hold;
+    renderHoldButton();
   }
-  if (offbar.containsPoint(p)){
+  if (offbar.containsPoint(p))
+  {
     int lenOfSubBox = (offbar.maxX - offbar.minX) / 4;
-    if(p.x < offbar.minX + (1*lenOfSubBox)){
+    if (p.x < offbar.minX + (1 * lenOfSubBox))
+    {
       controlSetting = ControlSetting::HEAT;
-    } else if(p.x < offbar.minX + (2*lenOfSubBox)){
-      controlSetting = ControlSetting::AC;
-    } else if (p.x < offbar.minX + (3*lenOfSubBox)){
+    }
+    else if (p.x < offbar.minX + (2 * lenOfSubBox))
+    {
+      controlSetting = ControlSetting::ON;
+    }
+    else if (p.x < offbar.minX + (3 * lenOfSubBox))
+    {
       controlSetting = ControlSetting::AUTO;
-    } else {
+    }
+    else
+    {
       controlSetting = ControlSetting::OFF;
     }
-    renderControlBar()
+    renderControlBar();
   }
 }
-
 
 // *****************************
 // program setup
@@ -233,33 +280,33 @@ void setup()
 {
   // Setup serial
   Serial.begin(9600);
-  #if !defined(ESP32)
-    while (!Serial)
+#if !defined(ESP32)
+  while (!Serial)
+    ;
+#endif
+  // If the SD is messed up talk about it
+  Serial.print(F("Initializing filesystem..."));
+#if defined(USE_SD_CARD)
+  if (!SD.begin(SD_CS, SD_SCK_MHZ(25)))
+  {
+    Serial.println(F("SD begin() failed"));
+    for (;;)
       ;
-  #endif
-    // If the SD is messed up talk about it
-    Serial.print(F("Initializing filesystem..."));
-  #if defined(USE_SD_CARD)
-    if (!SD.begin(SD_CS, SD_SCK_MHZ(25)))
-    {
-      Serial.println(F("SD begin() failed"));
-      for (;;)
-        ;
-    }
-  #else
-    if (!flash.begin())
-    {
-      Serial.println(F("flash begin() failed"));
-      for (;;)
-        ;
-    }
-    if (!filesys.begin(&flash))
-    {
-      Serial.println(F("filesys begin() failed"));
-      for (;;)
-        ;
-    }
-  #endif
+  }
+#else
+  if (!flash.begin())
+  {
+    Serial.println(F("flash begin() failed"));
+    for (;;)
+      ;
+  }
+  if (!filesys.begin(&flash))
+  {
+    Serial.println(F("filesys begin() failed"));
+    for (;;)
+      ;
+  }
+#endif
 
   // by this point sd is good to go
   Serial.println(F("OK!"));
@@ -291,14 +338,13 @@ void loop(void)
     Serial.print("\t");
     p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
     p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
-    
 
-//    p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
-//    p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
-//    int newy = p.x;
-//    newx += 240;
-//    p.x = newx;
-//    p.y = newy;
+    //    p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
+    //    p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
+    //    int newy = p.x;
+    //    newx += 240;
+    //    p.x = newx;
+    //    p.y = newy;
     // p.y=320-p.y;
     Serial.print("X2 = ");
     Serial.print(p.x);
@@ -306,41 +352,39 @@ void loop(void)
     Serial.print(p.y);
     Serial.print("\tPressure = ");
     Serial.println(p.z);
-    tft.drawRect(p.x, p.y, 5, 5, ILI9341_BLUE);
 
-    switch(screenSetting){
-      case ScreenSetting::MAIN:
-          Serial.print("main\n");
-          callbackMainScreen(p);
-          //renderMainScreen();
-          break;
-      case ScreenSetting::PRESET_SELECT_SET:
-          break;
-      case ScreenSetting::PRESET_SET:
-          break;
-      case ScreenSetting::CLOCK_SET:
-          break;
+    switch (screenSetting)
+    {
+    case ScreenSetting::MAIN:
+      Serial.print("main\n");
+      callbackMainScreen(p);
+      //renderMainScreen();
+      break;
+    case ScreenSetting::PRESET_SELECT_SET:
+      break;
+    case ScreenSetting::PRESET_SET:
+      break;
+    case ScreenSetting::CLOCK_SET:
+      break;
     }
-
-
   }
-  drawRectangle(toghoff);
   delay(1000);
 }
 
 // *****************************
 // helpter function defs
 
-void drawRectangle(Component c) {
-    Serial.print("cmin = (");
-    Serial.print(c.minX);
-    Serial.print(",");
-    Serial.print(c.minY);
-    Serial.print(") cmax = ");
-    Serial.print(c.maxX);
-    Serial.print(",");
-    Serial.print(c.maxY);
-    Serial.print(")\n");
-  tft.drawRect(c.minX, c.minY, c.maxX-c.minX, c.maxY-c.minY, ILI9341_RED);
+void drawRectangle(Component c)
+{
+  Serial.print("cmin = (");
+  Serial.print(c.minX);
+  Serial.print(",");
+  Serial.print(c.minY);
+  Serial.print(") cmax = ");
+  Serial.print(c.maxX);
+  Serial.print(",");
+  Serial.print(c.maxY);
+  Serial.print(")\n");
+  tft.drawRect(c.minX, c.minY, c.maxX - c.minX, c.maxY - c.minY, ILI9341_RED);
 }
 // *****************************
