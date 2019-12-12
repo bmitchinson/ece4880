@@ -1,0 +1,26 @@
+compname - x:y (upper left) - x:y (lower right)
+
+swchoff - 149:214 - 225:242
+swchonn - 149:214 - 225:242
+
+time_div - 0:52 - 240:164
+
+tabfour - 0:290 - 240:320
+tabthree - 0:290 - 240:320
+tabtwo - 0:290 - 240:320
+tabone - 0:290 - 240:320
+
+endtitle - 58:20 - 187:41
+daytitle - 58:20 - 187:41
+
+pm_butt - 180:94 - 230:127
+am_butt - 180:94 - 230:127
+
+sec_up - 99:63 - 172:81
+sec_down - 99:135 - 172:153
+tmpleft - 11:189 - 29:262
+tmpright - 111:189 - 129:262
+h_up - 11:63 - 84:81
+h_down - 11:135 - 84:153
+
+
