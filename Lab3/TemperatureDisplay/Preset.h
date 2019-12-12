@@ -5,6 +5,8 @@
 #ifndef TEMPERATUREDISPLAY_PRESET_H
 #define TEMPERATUREDISPLAY_PRESET_H
 
+#include "EnumDayofWeek.h"
+
 class Preset {
 public:
     // constructor
@@ -14,6 +16,16 @@ public:
         this->m_isAm = isAm;
         this->m_isWeekday = isWeekday;
         this->m_temp = temp;
+        this->m_day = DaysOfWeek::Days::FRIDAY;
+    }
+
+    // set and get day of the week
+    void setDay(DaysOfWeek::Days day) {
+        this->m_day = day;
+    }
+
+    DaysOfWeek::Days getDay() {
+        return this->m_day
     }
 
     // increment/decrement
@@ -150,6 +162,9 @@ private:
 
     // temp data
     int m_temp;
+
+    // day of week for setting the time
+    DaysOfWeek::Days m_day;
 };
 
 #endif //TEMPERATUREDISPLAY_PRESET_H

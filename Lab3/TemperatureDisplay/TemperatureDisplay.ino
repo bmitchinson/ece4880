@@ -180,6 +180,7 @@ Preset preDay1 = Preset(12, 0, true, true, 72);
 Preset preDay2 = Preset(12, 0, true, true, 72);
 Preset preDay3 = Preset(12, 0, true, true, 72);
 Preset preDay4 = Preset(12, 0, true, true, 72);
+Preset preClock = Preset(12, 0, true, true, 72);
 // *****************************
 
 
@@ -201,8 +202,6 @@ PresetSelectSetSetting presetSelectSetSetting = PresetSelectSetSetting::WEEKEND;
 
 // preset set screen variables
 PresetTabSelectSetting presetTabSelectSetting = PresetTabSelectSetting::ONE;
-bool presetActive = true;
-bool presetIsAm = true;
 Preset *activePreset;
 // *****************************
 
@@ -259,7 +258,7 @@ void renderPresetSelectSetScreen() {
     daybutt.render();
 }
 
-// PRESET SET MODE
+// PRESET SET MODE -- DONE
 void renderActivePresetActiveSwitch() {
     if (activePreset->isActive()) {
         swchon.render();
@@ -284,7 +283,6 @@ void renderPresetTabs() {
             break;
     }
 }
-
 
 void renderWeekDayWeekendTitle() {
     if (presetSelectSetSetting == PresetSelectSetSetting::WEEKDAY) {
@@ -396,11 +394,38 @@ void renderPresetSetScreen() {
 
 // SET CLOCK RENDERING
 void renderTimeAmPm() {
-    if (timeIsAm) {
+    if (preClock.isAm()) {
         t_am_but.render();
     } else {
         t_pm_but.render();
     }
+}
+
+void renderClockMinute() {
+    clearArea(t_min_up.minX, t_min_up.maxY + 3, t_min_up.maxX - t_min_up.minX, t_min_dn.minY - t_min_up.maxY - 6);
+    drawTextSetup(((int) (t_min_up.maxX - t_min_up.minX) / 5) + t_min_up.minX,
+                  ((int) (t_min_dn.minY - t_min_up.maxY) / 5) + t_min_up.maxY, 4);
+    if (preClock->getMinute() < 10) {
+        tft.print(0);
+    }
+    tft.println(preClock->getMinute());
+}
+
+void renderClockHour() {
+    clearArea(t_hr_up.minX, t_hr_up.maxY + 3, t_hr_up.maxX - t_hr_up.minX, t_hr_dn.minY - t_hr_up.maxY - 6);
+    drawTextSetup(((int) (t_hr_up.maxX - t_hr_up.minX) / 5) + t_hr_up.minX,
+                  ((int) (t_hr_dn.minY - t_hr_up.maxY) / 5) + t_hr_up.maxY, 4);
+    if (preClock->getHour() < 10) {
+        tft.print(0);
+    }
+    tft.println(preClock->getHour());
+}
+
+void renderClockDay() {
+    clearArea(dayleft.maxX + 3, dayleft.minY, dayright.minX - dayleft.maxX - 6, dayleft.maxY - dayleft.minY);
+    drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 6) + dayleft.maxX,
+                  ((int) (dayright.maxY - dayright.minY) / 4) + dayright.minY, 4);
+    tft.println(DaysOfWeek::ToString(preClock->getDay()));
 }
 
 void renderClockSetScreen() {
@@ -479,11 +504,9 @@ void callbackMainScreen(TSPoint p) {
     }
         // Cross page navigation
     else if (setlock.containsPoint(p)) {
-        Serial.println('to cs');
         screenSetting = ScreenSetting::CLOCK_SET;
         renderClockSetScreen();
     } else if (setpre.containsPoint(p)) {
-        Serial.println('to pss');
         screenSetting = ScreenSetting::PRESET_SELECT_SET;
         renderPresetSelectSetScreen();
     }
@@ -501,7 +524,6 @@ void callbackPresetSelectSet(TSPoint p) {
         screenSetting = ScreenSetting::PRESET_SET;
         renderPresetSetScreen();
     } else if (backbutt.containsPoint(p)) {
-        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     }
@@ -514,11 +536,9 @@ void callbackClockSet(TSPoint p) {
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
         // TODO: save new clock state to EEPORM
-        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     } else if (t_bc_but.containsPoint(p)) {
-        Serial.println('to m');
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     }
@@ -649,41 +669,21 @@ void loop(void) {
     TSPoint p = ts.getPoint();
     if (p.z > ts.pressureThreshhold) {
         // button press occurred
-        Serial.print("X1 = ");
-        Serial.print(p.x);
-        Serial.print("\tY1 = ");
-        Serial.print(p.y);
-        Serial.print("\t");
         p.x = map(p.x, TS_MAXX, TS_MINX, 240, 0);
         p.y = map(p.y, TS_MAXY, TS_MINY, 320, 0);
-        Serial.print("X2 = ");
-        Serial.print(p.x);
-        Serial.print("\tY2 = ");
-        Serial.print(p.y);
-        Serial.print("\tPressure = ");
-        Serial.println(p.z);
-
         // call the callback function neccesary to handle the touch
-        Serial.println(screenSetting);
-
         switch (screenSetting) {
             case ScreenSetting::MAIN:
                 callbackMainScreen(p);
-                Serial.println('m');
                 break;
             case ScreenSetting::PRESET_SELECT_SET:
                 callbackPresetSelectSet(p);
-                Serial.println('pss');
                 break;
             case ScreenSetting::PRESET_SET:
                 callbackPresetSet(p);
-                Serial.println('ps');
-
                 break;
             case ScreenSetting::CLOCK_SET:
                 callbackClockSet(p);
-                Serial.println('cs');
-
                 break;
         }
     }
