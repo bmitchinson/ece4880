@@ -1,0 +1,12 @@
+compname - x:y (upper left) - x:y (lower right)
+setlock - 12:11 - 74:75
+setpre - 89:11 - 151:75
+toghoff - 166:11 - 228:75
+toghon - 166:11 - 228:75
+upbutt - 148:112 - 221:130
+downbutt - 148:189 - 221:207
+tempspot - 17:105 - 129:217
+heatbar - 24:226 - 217:305
+acbar - 24:226 - 217:305
+autobar - 24:226 - 217:305
+offbar - 24:226 - 217:305
