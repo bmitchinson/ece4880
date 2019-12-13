@@ -634,7 +634,7 @@ void callbackClockSet(TSPoint p) {
         }
         preClock.setDay((Days) tmp);
         renderClockTime();
-    } else if (datleft.containsPoint(p)) {
+    } else if (dayleft.containsPoint(p)) {
         int tmp = (int) preClock.getDay();
         tmp -= 1;
         if (tmp < 0) {
@@ -646,6 +646,8 @@ void callbackClockSet(TSPoint p) {
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
         // TODO: save new clock state to EEPORM
+        EEPROM.update(magic_location, 0x00);
+        EEPROM.put(preClock.getAddr(), preClock);
         screenSetting = ScreenSetting::MAIN;
         renderMainScreen();
     } else if (t_bc_but.containsPoint(p)) {
@@ -761,7 +763,6 @@ void setup() {
     if (!rtc.begin()) {
         while (1);
     }
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
     if (!rtc.isrunning()) {
         // following line sets the RTC to the date & time this sketch was compiled
@@ -803,6 +804,8 @@ void setup() {
             rtc.adjust(DateTime(y, mon, d, oldHour, oldMin, 0));
         }
     }
+            rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
     tft.begin();
     // initial rendering
     renderMainScreen();
