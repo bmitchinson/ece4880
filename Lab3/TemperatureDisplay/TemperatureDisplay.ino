@@ -252,6 +252,7 @@ void renderMainScreen() {
     upbutt.render();
     downbutt.render();
     tempspot.render();
+    drawCurrentTemp();
 }
 
 
@@ -429,8 +430,8 @@ void renderClockHour() {
 
 void renderClockDay() {
     clearArea(dayleft.maxX + 3, dayleft.minY, dayright.minX - dayleft.maxX - 6, dayleft.maxY - dayleft.minY);
-    drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 6) + dayleft.maxX,
-                  ((int) (dayright.maxY - dayright.minY) / 4) + dayright.minY, 4);
+    drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 12) + dayleft.maxX,
+                  ((int) (dayright.maxY - dayright.minY) / 3) + dayright.minY, 2);
     switch (preClock.getDay()) {
         case Days::MONDAY:
             tft.println("MONDAY");
@@ -457,6 +458,13 @@ void renderClockDay() {
     }
 }
 
+void renderClockTime() {
+    renderClockDay();
+    renderClockHour();
+    renderClockMinute();
+    renderTimeAmPm();
+}
+
 void renderClockSetScreen() {
     tft.fillScreen(ILI9341_WHITE);
     dayleft.render();
@@ -470,6 +478,7 @@ void renderClockSetScreen() {
     t_sv_but.render();
     t_bc_but.render();
     setclock.render();
+    renderClockTime();
 }
 // *****************************
 
@@ -560,7 +569,38 @@ void callbackPresetSelectSet(TSPoint p) {
 
 // CLOCK SET
 void callbackClockSet(TSPoint p) {
-    // TODO: add time manipulation callbacks
+    if (t_min_dn.containsPoint(p)) {
+        preClock.decMinute();
+        renderClockTime();
+    } else if (t_min_up.containsPoint(p)) {
+        preClock.incMinute();
+        renderClockTime();
+    } else if (t_hr_dn.containsPoint(p)) {
+        preClock.decHour();
+        renderClockTime();
+    } else if (t_hr_up.containsPoint(p)) {
+        preClock.incHour();
+        renderClockTime();
+    } else if (t_am_but.containsPoint(p)) {
+        preClock.toggleAmPm();
+        renderClockTime();
+    } else if (dayright.containsPoint(p)) {
+        int tmp = (int) preClock.getDay();
+        tmp++;
+        if (tmp > 6) {
+            tmp = 0;
+        }
+        preClock.setDay((Days) tmp);
+        renderClockTime();
+    } else if (dayleft.containsPoint(p)) {
+        int tmp = (int) preClock.getDay();
+        tmp -= 1;
+        if (tmp < 0) {
+            tmp = 6;
+        }
+        preClock.setDay((Days) tmp);
+        renderClockTime();
+    }
 
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
