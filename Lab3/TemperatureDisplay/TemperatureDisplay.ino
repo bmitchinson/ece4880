@@ -800,12 +800,13 @@ void setup() {
             int y = nowTime.year();
             int mon = nowTime.month();
             int d = nowTime.day();
+            int h = nowTime.hour();
+            int m = nowTime.minute();
 
             rtc.adjust(DateTime(y, mon, d, oldHour, oldMin, 0));
         }
     }
-            rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-
+        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     tft.begin();
     // initial rendering
     renderMainScreen();
