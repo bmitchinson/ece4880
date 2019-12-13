@@ -301,7 +301,7 @@ void renderWeekDayWeekendTitle() {
     }
 }
 
-void setActivePreset() {        
+void setActivePreset() {
     switch (presetSelectSetSetting) {
         case PresetSelectSetSetting::WEEKEND:
             switch (presetTabSelectSetting) {
@@ -416,7 +416,7 @@ void renderClockMinute() {
                   ((int) (t_min_dn.minY - t_min_up.maxY) / 5) + t_min_up.maxY, 4);
     if (preClock.getMinute() < 10) {
         tft.print(0);
-    }https://stackoverflow.com/questions/15727814/arduino-hash-table-dictionary
+    }
     tft.println(preClock.getMinute());
 }
 
@@ -460,6 +460,13 @@ void renderClockDay() {
     }
 }
 
+void renderClockTime() {
+    renderClockDay();
+    renderClockHour();
+    renderClockMinute();
+    renderTimeAmPm();
+}
+
 void renderClockSetScreen() {
     tft.fillScreen(ILI9341_WHITE);
     dayleft.render();
@@ -473,6 +480,9 @@ void renderClockSetScreen() {
     t_sv_but.render();
     t_bc_but.render();
     setclock.render();
+    renderClockDay();
+    renderClockHour();
+    renderClockMinute();
 }
 // *****************************
 
@@ -500,10 +510,10 @@ void callbackMainScreen(TSPoint p) {
             drawRectangle(upbutt);
         }
         if (setTemp >= currentTemp) {
-          digitalWrite(BLUE, LOW);
+            digitalWrite(BLUE, LOW);
         }
         if (setTemp <= currentTemp) {
-          digitalWrite(RED, LOW);
+            digitalWrite(RED, LOW);
         }
     } else if (downbutt.containsPoint(p)) {
         setTemp -= 1;
@@ -520,12 +530,12 @@ void callbackMainScreen(TSPoint p) {
             drawRectangle(downbutt);
         }
         if (setTemp >= currentTemp) {
-          digitalWrite(BLUE, LOW);
+            digitalWrite(BLUE, LOW);
         }
         if (setTemp <= currentTemp) {
-          digitalWrite(RED, LOW);
+            digitalWrite(RED, LOW);
         }
-        
+
     }
 
         // toggle hold
@@ -538,35 +548,31 @@ void callbackMainScreen(TSPoint p) {
         int lenOfSubBox = (offbar.maxX - offbar.minX) / 4;
         if (p.x < offbar.minX + (1 * lenOfSubBox)) {
             controlSetting = ControlSetting::HEAT;
-            if(setTemp > currentTemp) {
-              digitalWrite(RED, HIGH);
-            }
-            else {
-              digitalWrite(RED, LOW);
+            if (setTemp > currentTemp) {
+                digitalWrite(RED, HIGH);
+            } else {
+                digitalWrite(RED, LOW);
             }
             digitalWrite(BLUE, LOW);
         } else if (p.x < offbar.minX + (2 * lenOfSubBox)) {
             controlSetting = ControlSetting::ON;
-            if(setTemp < currentTemp) {
-              digitalWrite(BLUE, HIGH);
-            }
-            else {
-              digitalWrite(BLUE, LOW);
+            if (setTemp < currentTemp) {
+                digitalWrite(BLUE, HIGH);
+            } else {
+                digitalWrite(BLUE, LOW);
             }
             digitalWrite(RED, LOW);
         } else if (p.x < offbar.minX + (3 * lenOfSubBox)) {
             controlSetting = ControlSetting::AUTO;
-            if(setTemp < currentTemp) {
-              digitalWrite(BLUE, HIGH);
+            if (setTemp < currentTemp) {
+                digitalWrite(BLUE, HIGH);
+            } else {
+                digitalWrite(BLUE, LOW);
             }
-            else {
-              digitalWrite(BLUE, LOW);
-            }
-            if(setTemp > currentTemp) {
-              digitalWrite(RED, HIGH);
-            }
-            else {
-              digitalWrite(RED, LOW);
+            if (setTemp > currentTemp) {
+                digitalWrite(RED, HIGH);
+            } else {
+                digitalWrite(RED, LOW);
             }
         } else {
             controlSetting = ControlSetting::OFF;
@@ -605,7 +611,38 @@ void callbackPresetSelectSet(TSPoint p) {
 // CLOCK SET
 void callbackClockSet(TSPoint p) {
     // TODO: add time manipulation callbacks
-
+    if (t_min_dn.containsPoint(p)) {
+        preClock.decMinute();
+        renderClockTime();
+    } else if (t_min_up.containsPoint(p)) {
+        preClock.incMinute();
+        renderClockTime();
+    } else if (t_hr_dn.containsPoint(p)) {
+        preClock.decHour();
+        renderClockTime();
+    } else if (t_hr_up.containsPoint(p)) {
+        preClock.incHour();
+        renderClockTime();
+    } else if (t_am_but.containsPoint(p)) {
+        preClock.toggleAmPm();
+        renderTimeAmPm();
+    } else if (dayright.containsPoint(p)) {
+        int tmp = (int) preClock.getDay();
+        tmp += 1;
+        if (tmp > 6) {
+            tmp = 0;
+        }
+        preClock.setDay((Days) tmp);
+        renderClockTime();
+    } else if (datleft.containsPoint(p)) {
+        int tmp = (int) preClock.getDay();
+        tmp -= 1;
+        if (tmp < 0) {
+            tmp = 6;
+        }
+        preClock.setDay((Days) tmp);
+        renderClockTime();
+    }
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
         // TODO: save new clock state to EEPORM
@@ -724,48 +761,47 @@ void setup() {
     if (!rtc.begin()) {
         while (1);
     }
-           rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
     if (!rtc.isrunning()) {
-       // following line sets the RTC to the date & time this sketch was compiled
-       rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    }
-    else {
-      if(EEPROM.read(magic_location) != 0xFF) {
-        // Load presets
-        Serial.println("Getting Presets from EEPROM");
-        address = 0;
-        int sizePreset = sizeof(Preset);
-        EEPROM.get(address, preClock);
-        address += sizePreset;
-        EEPROM.get(address, preEnd1);        
-        address += sizePreset;
-        EEPROM.get(address, preEnd2);
-        address += sizePreset;
-        EEPROM.get(address, preEnd3);
-        address += sizePreset;
-        EEPROM.get(address, preEnd4);
-        address += sizePreset;
-        EEPROM.get(address, preDay1);
-        address += sizePreset;
-        EEPROM.get(address, preDay2);
-        address += sizePreset;
-        EEPROM.get(address, preDay3);
-        address += sizePreset;
-        EEPROM.get(address, preDay4);
-        address += sizePreset;
+        // following line sets the RTC to the date & time this sketch was compiled
+        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    } else {
+        if (EEPROM.read(magic_location) != 0xFF) {
+            // Load presets
+            Serial.println("Getting Presets from EEPROM");
+            address = 0;
+            int sizePreset = sizeof(Preset);
+            EEPROM.get(address, preClock);
+            address += sizePreset;
+            EEPROM.get(address, preEnd1);
+            address += sizePreset;
+            EEPROM.get(address, preEnd2);
+            address += sizePreset;
+            EEPROM.get(address, preEnd3);
+            address += sizePreset;
+            EEPROM.get(address, preEnd4);
+            address += sizePreset;
+            EEPROM.get(address, preDay1);
+            address += sizePreset;
+            EEPROM.get(address, preDay2);
+            address += sizePreset;
+            EEPROM.get(address, preDay3);
+            address += sizePreset;
+            EEPROM.get(address, preDay4);
+            address += sizePreset;
 
-        // Adjust RTC
-        uint8_t oldHour = preClock.getHour(); 
-        uint8_t oldMin = preClock.getMinute();
+            // Adjust RTC
+            uint8_t oldHour = preClock.getHour();
+            uint8_t oldMin = preClock.getMinute();
 
-        DateTime nowTime = DateTime(F(__DATE__), F(__TIME__));
-        int y = nowTime.year();
-        int mon = nowTime.month();
-        int d = nowTime.day();
-        
-        rtc.adjust(DateTime(y, mon, d, oldHour, oldMin, 0));
-      }
+            DateTime nowTime = DateTime(F(__DATE__), F(__TIME__));
+            int y = nowTime.year();
+            int mon = nowTime.month();
+            int d = nowTime.day();
+
+            rtc.adjust(DateTime(y, mon, d, oldHour, oldMin, 0));
+        }
     }
     tft.begin();
     // initial rendering
