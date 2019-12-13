@@ -11,6 +11,7 @@
 #include <OneWire.h>              // Temp Sensor Protocol
 #include <DallasTemperature.h>    // Temp Sensor Lib
 #include "RTClib.h"               // Real Time Clock Lib
+#include <EEPROM.h>
 // *****************************
 
 // TODO
@@ -93,6 +94,10 @@ Adafruit_ImageReader reader(filesys); // Image-reader, pass in flash filesys
 // *****************************
 // global variables
 
+// EEPROM Address
+int address = 0;
+int magic_location = 400;
+
 // RTC
 RTC_DS1307 rtc;
 // screen and display objects
@@ -172,15 +177,16 @@ Component tempspot = Component(17, 105, 129, 217, "/tempspot.bmp", &ts, &tft);
 
 // *****************************
 // list of all state that will need to be stored in EEPROM
-Preset preEnd1 = Preset(12, 0, true, false, 72);
-Preset preEnd2 = Preset(12, 0, true, false, 72);
-Preset preEnd3 = Preset(12, 0, true, false, 72);
-Preset preEnd4 = Preset(12, 0, true, false, 72);
-Preset preDay1 = Preset(12, 0, true, true, 72);
-Preset preDay2 = Preset(12, 0, true, true, 72);
-Preset preDay3 = Preset(12, 0, true, true, 72);
-Preset preDay4 = Preset(12, 0, true, true, 72);
-Preset preClock = Preset(12, 0, true, true, 72);
+int sizePreset = sizeof(Preset);
+Preset preClock = Preset(12, 0, true, true, 72, 0);
+Preset preEnd1 = Preset(12, 0, true, false, 72, sizePreset);
+Preset preEnd2 = Preset(12, 0, true, false, 72, 2 * sizePreset);
+Preset preEnd3 = Preset(12, 0, true, false, 72, 3 * sizePreset);
+Preset preEnd4 = Preset(12, 0, true, false, 72, 4 * sizePreset);
+Preset preDay1 = Preset(12, 0, true, true, 72, 5 * sizePreset);
+Preset preDay2 = Preset(12, 0, true, true, 72, 6 * sizePreset);
+Preset preDay3 = Preset(12, 0, true, true, 72, 7 * sizePreset);
+Preset preDay4 = Preset(12, 0, true, true, 72, 8 * sizePreset);
 // *****************************
 
 
@@ -292,7 +298,7 @@ void renderWeekDayWeekendTitle() {
     }
 }
 
-void setActivePreset() {
+void setActivePreset() {        
     switch (presetSelectSetSetting) {
         case PresetSelectSetSetting::WEEKEND:
             switch (presetTabSelectSetting) {
@@ -623,7 +629,8 @@ void callbackPresetSet(TSPoint p) {
     } else if (set_preset_back_button.containsPoint(p)) {
         screenSetting = ScreenSetting::PRESET_SELECT_SET;
         renderPresetSelectSetScreen();
-        // TODO: store presets in EEPROM
+        EEPROM.update(magic_location, 0x00);
+        EEPROM.put(activePreset->getAddr(), *activePreset);
     }
 }
 // *****************************
@@ -663,14 +670,50 @@ void setup() {
     Serial.println(F("OK!"));
 
     // Set Up Real Time Clock if not already set up
-
+    Serial.println("EEPROM Val: ");
+    Serial.println(EEPROM.read(magic_location));
     if (!rtc.begin()) {
         while (1);
     }
-
     if (!rtc.isrunning()) {
-        // following line sets the RTC to the date & time this sketch was compiled
-        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+       // following line sets the RTC to the date & time this sketch was compiled
+       rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
+    else {
+      if(EEPROM.read(magic_location) != 0xFF) {
+        // Load presets
+        Serial.println("Getting Presets from EEPROM");
+        address = 0;
+        int sizePreset = sizeof(Preset);
+        EEPROM.get(address, preClock);
+        address += sizePreset;
+        EEPROM.get(address, preEnd1);
+        
+        Serial.println((String)preEnd1.getHour() + (String)preEnd1.getMinute());
+        
+        address += sizePreset;
+        EEPROM.get(address, preEnd2);
+        address += sizePreset;
+        EEPROM.get(address, preEnd3);
+        address += sizePreset;
+        EEPROM.get(address, preEnd4);
+        address += sizePreset;
+        EEPROM.get(address, preDay1);
+        address += sizePreset;
+        EEPROM.get(address, preDay2);
+        address += sizePreset;
+        EEPROM.get(address, preDay3);
+        address += sizePreset;
+        EEPROM.get(address, preDay4);
+        address += sizePreset;
+
+        // Adjust RTC
+        uint8_t oldHour = preClock.getHour(); 
+        uint8_t oldMin = preClock.getMinute();
+
+        DateTime curr = DateTime(F(__DATE__), oldHour, oldMin, 0);
+        rtc.adjust(curr);
+      }
     }
 
     tft.begin();

@@ -10,13 +10,14 @@
 class Preset {
 public:
     // constructor
-    Preset(int hour, int minute, bool isAm, bool isWeekday, int temp) {
+    Preset(int hour, int minute, bool isAm, bool isWeekday, int temp, int address) {
         this->setHour(hour);
         this->setMinute(minute);
         this->m_isAm = isAm;
         this->m_isWeekday = isWeekday;
         this->m_temp = temp;
         this->m_day = Days::FRIDAY;
+        this->m_address = address;
     }
 
     // set and get day of the week
@@ -151,6 +152,10 @@ public:
         this->m_temp = t;
     }
 
+    int getAddr() {
+      return this->m_address;
+    }
+
 
 private:
     // time data
@@ -159,6 +164,7 @@ private:
     bool m_isAm;
     bool m_isWeekday;
     bool m_isActive;
+    int m_address;
 
     // temp data
     int m_temp;
