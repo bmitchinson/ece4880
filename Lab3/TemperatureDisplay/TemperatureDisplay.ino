@@ -15,9 +15,8 @@
 // *****************************
 
 // TODO
-// -- store presets in EEPROM -> Zain
 // -- preset setting --> Alex -- DONE
-// -- preset storing --> Zain
+// -- preset storing --> Zain -- DONE
 // -- clock setting --> Alex
 // -- clock storing --> Zain
 // -- LED functionality --> Zain
@@ -36,6 +35,10 @@
 #define XM A3 // must be an analog pin, use "An" notation!
 #define YM 8  // can be a digital pin
 #define XP 7  // can be a digital pin
+
+// LED definitions
+#define RED 13
+#define BLUE 12
 
 // Touch screen variables defining maximum and minum inputs to
 // convert between touch screen and display coordinates
@@ -252,7 +255,6 @@ void renderMainScreen() {
     upbutt.render();
     downbutt.render();
     tempspot.render();
-    drawCurrentTemp();
 }
 
 
@@ -414,7 +416,7 @@ void renderClockMinute() {
                   ((int) (t_min_dn.minY - t_min_up.maxY) / 5) + t_min_up.maxY, 4);
     if (preClock.getMinute() < 10) {
         tft.print(0);
-    }
+    }https://stackoverflow.com/questions/15727814/arduino-hash-table-dictionary
     tft.println(preClock.getMinute());
 }
 
@@ -430,8 +432,8 @@ void renderClockHour() {
 
 void renderClockDay() {
     clearArea(dayleft.maxX + 3, dayleft.minY, dayright.minX - dayleft.maxX - 6, dayleft.maxY - dayleft.minY);
-    drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 12) + dayleft.maxX,
-                  ((int) (dayright.maxY - dayright.minY) / 3) + dayright.minY, 2);
+    drawTextSetup(((int) (dayright.minX - dayleft.maxX) / 6) + dayleft.maxX,
+                  ((int) (dayright.maxY - dayright.minY) / 4) + dayright.minY, 4);
     switch (preClock.getDay()) {
         case Days::MONDAY:
             tft.println("MONDAY");
@@ -458,13 +460,6 @@ void renderClockDay() {
     }
 }
 
-void renderClockTime() {
-    renderClockDay();
-    renderClockHour();
-    renderClockMinute();
-    renderTimeAmPm();
-}
-
 void renderClockSetScreen() {
     tft.fillScreen(ILI9341_WHITE);
     dayleft.render();
@@ -478,7 +473,6 @@ void renderClockSetScreen() {
     t_sv_but.render();
     t_bc_but.render();
     setclock.render();
-    renderClockTime();
 }
 // *****************************
 
@@ -505,6 +499,12 @@ void callbackMainScreen(TSPoint p) {
         if (maxed_out) {
             drawRectangle(upbutt);
         }
+        if (setTemp >= currentTemp) {
+          digitalWrite(BLUE, LOW);
+        }
+        if (setTemp <= currentTemp) {
+          digitalWrite(RED, LOW);
+        }
     } else if (downbutt.containsPoint(p)) {
         setTemp -= 1;
         if (maxed_out) {
@@ -519,6 +519,13 @@ void callbackMainScreen(TSPoint p) {
         if (mined_out) {
             drawRectangle(downbutt);
         }
+        if (setTemp >= currentTemp) {
+          digitalWrite(BLUE, LOW);
+        }
+        if (setTemp <= currentTemp) {
+          digitalWrite(RED, LOW);
+        }
+        
     }
 
         // toggle hold
@@ -531,12 +538,40 @@ void callbackMainScreen(TSPoint p) {
         int lenOfSubBox = (offbar.maxX - offbar.minX) / 4;
         if (p.x < offbar.minX + (1 * lenOfSubBox)) {
             controlSetting = ControlSetting::HEAT;
+            if(setTemp > currentTemp) {
+              digitalWrite(RED, HIGH);
+            }
+            else {
+              digitalWrite(RED, LOW);
+            }
+            digitalWrite(BLUE, LOW);
         } else if (p.x < offbar.minX + (2 * lenOfSubBox)) {
             controlSetting = ControlSetting::ON;
+            if(setTemp < currentTemp) {
+              digitalWrite(BLUE, HIGH);
+            }
+            else {
+              digitalWrite(BLUE, LOW);
+            }
+            digitalWrite(RED, LOW);
         } else if (p.x < offbar.minX + (3 * lenOfSubBox)) {
             controlSetting = ControlSetting::AUTO;
+            if(setTemp < currentTemp) {
+              digitalWrite(BLUE, HIGH);
+            }
+            else {
+              digitalWrite(BLUE, LOW);
+            }
+            if(setTemp > currentTemp) {
+              digitalWrite(RED, HIGH);
+            }
+            else {
+              digitalWrite(RED, LOW);
+            }
         } else {
             controlSetting = ControlSetting::OFF;
+            digitalWrite(BLUE, LOW);
+            digitalWrite(RED, LOW);
         }
         renderControlBar();
     }
@@ -569,38 +604,7 @@ void callbackPresetSelectSet(TSPoint p) {
 
 // CLOCK SET
 void callbackClockSet(TSPoint p) {
-    if (t_min_dn.containsPoint(p)) {
-        preClock.decMinute();
-        renderClockTime();
-    } else if (t_min_up.containsPoint(p)) {
-        preClock.incMinute();
-        renderClockTime();
-    } else if (t_hr_dn.containsPoint(p)) {
-        preClock.decHour();
-        renderClockTime();
-    } else if (t_hr_up.containsPoint(p)) {
-        preClock.incHour();
-        renderClockTime();
-    } else if (t_am_but.containsPoint(p)) {
-        preClock.toggleAmPm();
-        renderClockTime();
-    } else if (dayright.containsPoint(p)) {
-        int tmp = (int) preClock.getDay();
-        tmp++;
-        if (tmp > 6) {
-            tmp = 0;
-        }
-        preClock.setDay((Days) tmp);
-        renderClockTime();
-    } else if (dayleft.containsPoint(p)) {
-        int tmp = (int) preClock.getDay();
-        tmp -= 1;
-        if (tmp < 0) {
-            tmp = 6;
-        }
-        preClock.setDay((Days) tmp);
-        renderClockTime();
-    }
+    // TODO: add time manipulation callbacks
 
     // only cross page navigation
     if (t_sv_but.containsPoint(p)) {
@@ -709,9 +713,15 @@ void setup() {
     // by this point sd is good to go
     Serial.println(F("OK!"));
 
+    pinMode(RED, OUTPUT);
+    pinMode(BLUE, OUTPUT);
+    digitalWrite(RED, LOW);
+    digitalWrite(BLUE, LOW);
+
     // Set Up Real Time Clock if not already set up
     Serial.println("EEPROM Val: ");
     Serial.println(EEPROM.read(magic_location));
+    EEPROM.update(magic_location, 0xFF);
     if (!rtc.begin()) {
         while (1);
     }
