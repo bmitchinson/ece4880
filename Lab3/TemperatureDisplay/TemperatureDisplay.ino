@@ -19,7 +19,7 @@
 // -- preset storing --> Zain -- DONE
 // -- clock setting --> Alex
 // -- clock storing --> Zain
-// -- LED functionality --> Zain
+// -- LED functionality --> Zain -- DONE
 
 // *****************************
 // global constants
@@ -721,10 +721,11 @@ void setup() {
     // Set Up Real Time Clock if not already set up
     Serial.println("EEPROM Val: ");
     Serial.println(EEPROM.read(magic_location));
-    EEPROM.update(magic_location, 0xFF);
     if (!rtc.begin()) {
         while (1);
     }
+           rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
     if (!rtc.isrunning()) {
        // following line sets the RTC to the date & time this sketch was compiled
        rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -737,10 +738,7 @@ void setup() {
         int sizePreset = sizeof(Preset);
         EEPROM.get(address, preClock);
         address += sizePreset;
-        EEPROM.get(address, preEnd1);
-        
-        Serial.println((String)preEnd1.getHour() + (String)preEnd1.getMinute());
-        
+        EEPROM.get(address, preEnd1);        
         address += sizePreset;
         EEPROM.get(address, preEnd2);
         address += sizePreset;
@@ -761,11 +759,14 @@ void setup() {
         uint8_t oldHour = preClock.getHour(); 
         uint8_t oldMin = preClock.getMinute();
 
-        DateTime curr = DateTime(F(__DATE__), oldHour, oldMin, 0);
-        rtc.adjust(curr);
+        DateTime nowTime = DateTime(F(__DATE__), F(__TIME__));
+        int y = nowTime.year();
+        int mon = nowTime.month();
+        int d = nowTime.day();
+        
+        rtc.adjust(DateTime(y, mon, d, oldHour, oldMin, 0));
       }
     }
-
     tft.begin();
     // initial rendering
     renderMainScreen();
